@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Imágenes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Configuración de Imagen</h1>
+        
+        <form id="config-form">
+            <div class="form-group">
+                <label for="fecha">Seleccionar Fecha:</label>
+                <input type="date" id="fecha" name="fecha" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo">Tipo de Gráfico:</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="">Seleccione un tipo</option>
+                    <option value="lineal">Gráfico Lineal</option>
+                    <option value="barras">Gráfico de Barras</option>
+                    <option value="dispersion">Gráfico de Dispersión</option>
+                </select>
+            </div>
+            
+            <button type="submit">Generar Imagen</button>
+        </form>
+        
+        <div id="loading" class="hidden">Generando imagen...</div>
+        <div id="imagen-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
