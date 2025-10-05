@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN ---
     const MAPBOX_TOKEN = 'sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A'; // <-- REEMPLAZA ESTO
     const MAPBOX_STYLE_URL = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`;
-    const MAPBOX_ATTRIBUTION = '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>';
+    const MAPBOX_ATTRIBUTION = '© Mapbox';
 
     // --- ELEMENTOS DEL DOM ---
     const navButtons = document.querySelectorAll('.nav-button');

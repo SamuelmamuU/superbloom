@@ -3,105 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Ecosistemas</title>
+    <title>EcoMap - Análisis Ambiental</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
      
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
 </head>
 <body>
 
-    <div class="main-container">
-        <aside class="sidebar">
-            <header>
-                <h1>🛰️ Geo Analizador</h1>
-                <p>Define una región y dos períodos de tiempo para comparar la salud de la vegetación.</p>
-            </header>
+    <div class="app-container">
+        <nav class="main-nav">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-seedling" style="color: #ffffff;"></i></div>
+                <div>
+                    <h1>EcoMap</h1>
+                    <p>Sistema de Análisis Ambiental</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-button active" data-view="map"><i class="fa-regular fa-map" style="color: #ffffff;"></i> Mapa</button>
+                <button class="nav-button" data-view="analytics"><i class="fa-solid fa-chart-simple" style="color: #ffffff;"></i> Análisis</button>
+            </div>
+            <div class="status">
+                <div class="status-indicator"></div>
+                Sistema Activo
+            </div>
+        </nav>
 
-            <form id="analysis-form">
-                <fieldset>
-                    <legend>1. Región de Interés</legend>
-                    <div class="coord-grid">
-                        <div class="form-group">
-                            <label for="xmin">Longitud Oeste</label>
-                            <input type="number" id="xmin" step="any" required value="-115.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="ymin">Latitud Sur</label>
-                            <input type="number" id="ymin" step="any" required value="32.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="xmax">Longitud Este</label>
-                            <input type="number" id="xmax" step="any" required value="-114.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="ymax">Latitud Norte</label>
-                            <input type="number" id="ymax" step="any" required value="33.0">
-                        </div>
-                    </div>
-                </fieldset>
+        <main class="main-content">
+    <div id="map-view" class="view active">
+        <aside class="map-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Filtros de Capas</h2>
+            </div>
 
-                <fieldset>
-                    <legend>2. Período Histórico</legend>
-                    <div class="date-grid">
-                        <div class="form-group">
-                            <label for="historic-start">Fecha de Inicio</label>
+            <div class="filter-card">
+                <h3>Capas de Datos</h3>
+                <div id="layer-controls">
+                    <p class="placeholder">Ejecuta un análisis para ver las capas disponibles.</p>
+                </div>
+            </div>
+
+            <div class="filter-card">
+                <h3>Período de Análisis</h3>
+                <form id="analysis-form">
+                    <fieldset>
+                        <legend>Región</legend>
+                        <div class="coord-grid">
+                            <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
+                            <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
+                            <input type="number" id="xmax" step="any" required value="-114.5" title="Longitud Este">
+                            <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Período Histórico</legend>
+                        <div class="date-grid">
                             <input type="date" id="historic-start" required value="2023-01-01">
-                        </div>
-                        <div class="form-group">
-                            <label for="historic-end">Fecha de Fin</label>
                             <input type="date" id="historic-end" required value="2023-03-31">
                         </div>
-                    </div>
-                </fieldset>
+                    </fieldset>
 
-                <fieldset>
-                    <legend>3. Período Actual</legend>
-                    <div class="date-grid">
-                        <div class="form-group">
-                            <label for="current-start">Fecha de Inicio</label>
+                    <fieldset>
+                        <legend>Período Actual</legend>
+                        <div class="date-grid">
                             <input type="date" id="current-start" required value="2023-04-01">
-                        </div>
-                        <div class="form-group">
-                            <label for="current-end">Fecha de Fin</label>
                             <input type="date" id="current-end" required value="2023-04-30">
                         </div>
+                    </fieldset>
+
+                    <button type="submit" id="submit-button">Analizar Región</button>
+                    <div id="loading" class="hidden">
+                        <div class="spinner"></div>
+                        <span>Procesando...</span>
                     </div>
-                </fieldset>
-
-                <button type="submit" id="submit-button">Analizar Ecosistema</button>
-                
-                <div id="loading" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Procesando en GEE...</p>
-                </div>
-            </form>
+                </form>
+            </div>
         </aside>
-
-        <main class="content-area">
-            <div class="tabs">
-                <button class="tab-button active" data-tab="map-content">🗺️ Mapa</button>
-                <button class="tab-button" data-tab="dashboard-content">📊 Dashboard</button>
-            </div>
-
-            <div id="map-content" class="tab-content active">
-                <div id="map"></div>
-            </div>
-
-            <div id="dashboard-content" class="tab-content">
-                <div id="dashboard-cards" class="results-grid">
-                    <p class="placeholder">Presiona "Analizar Ecosistema" para ver los resultados aquí.</p>
-                </div>
-            </div>
-        </main>
+        <div id="map"></div>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

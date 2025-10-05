@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMap - Análisis Ambiental</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+     
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <nav class="main-nav">
+            <div class="logo">
+                <div class="logo-icon">🌿</div>
+                <div>
+                    <h1>EcoMap</h1>
+                    <p>Sistema de Visualización Ambiental</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-button active" data-view="map">🗺️ Mapa</button>
+                <button class="nav-button" data-view="analytics">📊 Análisis</button>
+            </div>
+            <div class="status">
+                <div class="status-indicator"></div>
+                Sistema Activo
+            </div>
+        </nav>
+
+        <main class="main-content">
+
+            <div id="map-view" class="view active">
+                <aside class="map-sidebar">
+                    <h2>Parámetros de Análisis</h2>
+                    <form id="analysis-form">
+                        <fieldset>
+                            <legend>1. Región de Interés</legend>
+                            <div class="coord-grid">
+                                <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
+                                <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
+                                <input type="number" id="xmax" step="any" required value="-114.5" title="Longitud Este">
+                                <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>2. Período Histórico</legend>
+                            <div class="date-grid">
+                                <input type="date" id="historic-start" required value="2023-01-01">
+                                <input type="date" id="historic-end" required value="2023-03-31">
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>3. Período Actual</legend>
+                            <div class="date-grid">
+                                <input type="date" id="current-start" required value="2023-04-01">
+                                <input type="date" id="current-end" required value="2023-04-30">
+                            </div>
+                        </fieldset>
+
+                        <button type="submit" id="submit-button">Analizar Región</button>
+                        <div id="loading" class="hidden">
+                            <div class="spinner"></div>
+                            <span>Procesando...</span>
+                        </div>
+                    </form>
+                </aside>
+                <div id="map"></div>
+            </div>
+
+            <div id="analytics-view" class="view">
+                <div class="analytics-header">
+                    <h1>Análisis Ambiental</h1>
+                    <p>Dashboard de estadísticas y comparativas del ecosistema.</p>
+                </div>
+                
+                <div id="key-metrics" class="key-metrics-grid">
+                    </div>
+
+                <div id="detailed-dashboard" class="detailed-dashboard">
+                     </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

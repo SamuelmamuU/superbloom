@@ -38,7 +38,7 @@ body {
 .logo { display: flex; align-items: center; gap: 12px; }
 .logo-icon { font-size: 24px; }
 .logo h1 { font-size: 1.25rem; margin: 0; }
-.logo p { font-size: 0.75rem; color: var(--primary); margin: 0; }
+.logo p { font-size: 0.75rem; color: var(--muted-foreground); margin: 0; }
 .nav-button {
     padding: 8px 16px; border: none; background: transparent; color: var(--muted-foreground);
     cursor: pointer; font-size: 0.9rem; font-weight: 500; border-radius: 6px;
