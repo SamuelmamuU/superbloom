@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             map.invalidateSize();
         }
 
-    }, 1000);
+    }, 100);
 }
 
     video.addEventListener('ended', hideSplash);
