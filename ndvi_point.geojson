@@ -2,17 +2,6 @@
 "type": "FeatureCollection",
 "name": "ndvi_point",
 "features": [
-{ "type": "Feature", "properties": { "date": "2023-01-01", "ndvi": 0.086659543216228485 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-02-01", "ndvi": 0.084673292934894562 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-03-01", "ndvi": 0.056075729429721832 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-04-01", "ndvi": 0.20752228796482086 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-05-01", "ndvi": 0.097952134907245636 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-06-01", "ndvi": 0.083190694451332092 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-07-01", "ndvi": 0.078283153474330902 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-08-01", "ndvi": 0.074116304516792297 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-09-01", "ndvi": 0.092029303312301636 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-10-01", "ndvi": 0.13562533259391785 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-11-01", "ndvi": 0.11110894381999969 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } },
-{ "type": "Feature", "properties": { "date": "2023-12-01", "ndvi": 0.10609857738018036 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } }
+{ "type": "Feature", "properties": { "date": "2023-04-01", "ndvi": 0.20752228796482086 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } }
 ]
 }
