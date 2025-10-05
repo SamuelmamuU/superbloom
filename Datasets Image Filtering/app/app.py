@@ -1,48 +1,23 @@
 # app.py
 from flask import Flask, render_template, request, jsonify
 import ee
-import json
 import sys
 
-# --- PASO 1: AUTENTICACIÓN E INICIALIZACIÓN (Hacer esto una sola vez al iniciar el backend) ---
-# Descomenta y ejecuta la primera vez para autenticarte en tu cuenta de Google.
-# ee.Authenticate() 
-ee.Initialize(project='super-bloom') # Reemplaza con tu ID de proyecto de GEE
-
-# --- Constantes globales que no cambian con la entrada del usuario ---
-S2_COLLECTION = 'COPERNICUS/S2_SR_HARMONIZED'
-LST_COLLECTION = 'MODIS/061/MOD11A1'
-S2_BANDS = {'NIR': 'B8', 'RED': 'B4', 'GREEN': 'B3', 'BLUE': 'B2', 'QA': 'QA60'}
-CALCULATION_SCALE = 100 # en metros
-EVI_CONSTANTS = {
-    "G": 2.5, "L": 1, "C1": 6, "C2": 7.5
-}
-
-
-# --- INICIALIZACIÓN DE EARTH ENGINE (se hace una vez) ---
+# ===========================================
+# 1️⃣ INICIALIZACIÓN DE EARTH ENGINE
+# ===========================================
 try:
-    ee.Initialize(project='super-bloom') # Reemplaza con tu ID de proyecto
+    ee.Initialize(project='super-bloom')
+    print("✅ Google Earth Engine inicializado correctamente.")
 except Exception as e:
-    # Si la inicialización falla la primera vez (ej. en un entorno sin credenciales),
-    # intenta autenticar. En un servidor real, las credenciales se configuran de otra manera.
-    print("Inicialización fallida, intentando autenticar...")
+    print("🪪 Autenticando con Google Earth Engine...")
     ee.Authenticate()
     ee.Initialize(project='super-bloom')
+    print("✅ Autenticación completada e inicialización exitosa.")
 
-
-# --- PEGA AQUÍ TODAS TUS FUNCIONES AUXILIARES Y LA FUNCIÓN PRINCIPAL ---
-# (mask_s2_clouds, get_info_safe, interpretar_..., y la función analizar_region)
-
-# --- Funciones auxiliares (sin cambios) ---
-
-def mask_s2_clouds(image):
-    """Función para enmascarar nubes en imágenes de Sentinel-2."""
-    qa = image.select(S2_BANDS['QA'])
-    cloud_bit_mask = 1 << 10
-    cirrus_bit_mask = 1 << 11
-    mask = qa.bitwiseAnd(cloud_bit_mask).eq(0).And(
-           qa.bitwiseAnd(cirrus_bit_mask).eq(0))
-    return image.updateMask(mask).divide(10000)
+# ===========================================
+# 2️⃣ FUNCIONES AUXILIARES
+# ===========================================
 
 def get_info_safe(ee_object, default_value=None):
     """Función segura para obtener valores de GEE, manejando posibles errores."""
@@ -52,157 +27,127 @@ def get_info_safe(ee_object, default_value=None):
         print(f"Error al obtener datos de GEE: {e}", file=sys.stderr)
         return default_value
 
-def interpretar_ndvi(valor):
-    if valor is None: return "No se pudo calcular."
-    if valor < 0.1: return "Suelo desnudo, rocas o agua."
-    if valor < 0.3: return "Vegetación escasa o estresada."
-    if valor < 0.6: return "Vegetación moderada y saludable."
-    return "Vegetación densa y muy saludable."
+def interpretar_cambio_ndvi(valor):
+    """Interpreta el cambio en el valor de NDVI."""
+    if valor is None:
+        return "No se pudo calcular."
+    if valor > 0.1:
+        return "Mejora significativa de la vegetación."
+    if valor > 0.02:
+        return "Ligera mejora de la vegetación."
+    if valor < -0.1:
+        return "Degradación significativa de la vegetación."
+    if valor < -0.02:
+        return "Ligera degradación de la vegetación."
+    return "Cambio insignificante."
 
-def interpretar_ndsi_floral(valor):
-    if valor is None: return "No se pudo calcular."
-    if valor < -0.1: return "Dominancia de follaje verde."
-    if valor < 0.1: return "Mezcla de follaje y posible floración."
-    return "Alta probabilidad de floración visible (colores no verdes dominantes)."
+# ===========================================
+# 3️⃣ FUNCIÓN PRINCIPAL DE ANÁLISIS
+# ===========================================
 
-def interpretar_lst(valor):
-    if valor is None: return "No se pudo calcular."
-    if valor < 10: return "Temperatura fría."
-    if valor < 25: return "Temperatura templada."
-    if valor < 35: return "Temperatura cálida."
-    return "Temperatura muy alta."
-
-
-# --- FUNCIÓN PRINCIPAL PARA CONECTAR AL FRONTEND ---
-
-def analizar_region(coords_rectangulo, start_date, end_date):
+def analizar_ecosistema(coords_rectangulo, historic_start, historic_end, current_start, current_end):
     """
-    Ejecuta el análisis de imágenes satelitales para una región y fechas dadas.
-
-    Args:
-        coords_rectangulo (list): Una lista con las coordenadas [xmin, ymin, xmax, ymax].
-        start_date (str): Fecha de inicio en formato 'YYYY-MM-DD'.
-        end_date (str): Fecha de fin en formato 'YYYY-MM-DD'.
-
-    Returns:
-        dict: Un diccionario con los parámetros y resultados del análisis, listo para ser convertido a JSON.
+    Analiza el NDVI de una región en dos períodos y devuelve los datos para el mapa y el dashboard.
     """
-    
-    # --- PASO 2: PARÁMETROS DE ANÁLISIS (AHORA DINÁMICOS) ---
+    # --- Parámetros y Región de Interés ---
     region = ee.Geometry.Rectangle(coords_rectangulo)
+    # Calcula el centro para la vista del mapa en el frontend
+    centroides = region.centroid().coordinates().getInfo()
+    centro_mapa = [centroides[1], centroides[0]] # Lat, Lon
 
-    # --- PASO 3: PREPARACIÓN DE DATOS (SENTINEL-2) ---
-    s2_collection = ee.ImageCollection(S2_COLLECTION) \
-        .filterDate(start_date, end_date) \
-        .filterBounds(region) \
-        .map(mask_s2_clouds)
-    
-    image = s2_collection.median()
-    nir = image.select(S2_BANDS['NIR'])
-    red = image.select(S2_BANDS['RED'])
-    blue = image.select(S2_BANDS['BLUE'])
+    # --- Cargar colección Sentinel-2 y añadir NDVI ---
+    def add_ndvi(img):
+        # Enmascara nubes y sombras usando la banda SCL (Scene Classification Layer)
+        scl = img.select('SCL')
+        # Píxeles a mantener: vegetación, suelo desnudo, agua, nieve
+        good_quality = scl.eq(4).Or(scl.eq(5)).Or(scl.eq(6)).Or(scl.eq(11))
+        
+        ndvi = img.normalizedDifference(['B8', 'B4']).rename('NDVI')
+        return img.addBands(ndvi).updateMask(good_quality)
 
-    # --- PASO 4: CÁLCULO DE ÍNDICES DE VEGETACIÓN ---
-    ndvi = image.normalizedDifference([S2_BANDS['NIR'], S2_BANDS['RED']]).rename('NDVI')
-    evi = image.expression(
-        'G * ((NIR - RED) / (NIR + C1 * RED - C2 * BLUE + L))', {
-            'NIR': nir, 'RED': red, 'BLUE': blue, **EVI_CONSTANTS
-        }).rename('EVI')
-    ndsi_floral = image.normalizedDifference([S2_BANDS['GREEN'], S2_BANDS['RED']]).rename('NDSI_floral')
+    s2_collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED') \
+        .filterBounds(region)
 
-    # --- PASO 5: CÁLCULO DE CONDICIONES AMBIENTALES (LST) ---
-    lst_collection = ee.ImageCollection(LST_COLLECTION) \
-        .filterDate(start_date, end_date) \
-        .filterBounds(region) \
-        .select('LST_Day_1km')
-    
-    lst_image = lst_collection.median() \
-        .multiply(0.02) \
-        .subtract(273.15) \
-        .rename('LST_Celsius')
+    s2_ndvi = s2_collection.map(add_ndvi)
 
-    # --- PASO 6: REDUCCIÓN DE DATOS Y EXTRACCIÓN DE VALORES ---
+    # --- Calcular NDVI histórico, actual y la diferencia ---
+    ndvi_historic = s2_ndvi.filterDate(historic_start, historic_end).select('NDVI').median().clip(region)
+    ndvi_current = s2_ndvi.filterDate(current_start, current_end).select('NDVI').median().clip(region)
+    ndvi_diff = ndvi_current.subtract(ndvi_historic).rename('NDVI_diff')
+
+    # --- Obtener valores promedio para el Dashboard ---
     reducer = ee.Reducer.mean()
-    pixel_limit = 1e8
-    
-    mean_bands = image.reduceRegion(reducer=reducer, geometry=region, scale=CALCULATION_SCALE, maxPixels=pixel_limit)
-    
-    ndvi_val = get_info_safe(ndvi.reduceRegion(reducer=reducer, geometry=region, scale=CALCULATION_SCALE, maxPixels=pixel_limit).get('NDVI'))
-    evi_val = get_info_safe(evi.reduceRegion(reducer=reducer, geometry=region, scale=CALCULATION_SCALE, maxPixels=pixel_limit).get('EVI'))
-    ndsi_floral_val = get_info_safe(ndsi_floral.reduceRegion(reducer=reducer, geometry=region, scale=CALCULATION_SCALE, maxPixels=pixel_limit).get('NDSI_floral'))
-    lst_val = get_info_safe(lst_image.reduceRegion(reducer=reducer, geometry=region, scale=1000).get('LST_Celsius'))
+    scale = 100 # Escala en metros para el cálculo
 
-    # --- PASO 7: INTERPRETACIÓN Y ENSAMBLAJE DE RESULTADOS ---
-    results = {
-        'ndvi': {'valor': ndvi_val, 'interpretacion': interpretar_ndvi(ndvi_val)},
-        'evi': {'valor': evi_val, 'interpretacion': "Similar al NDVI, mejora la sensibilidad en áreas de alta biomasa." if evi_val is not None else "No se pudo calcular."},
-        'ndsi_floral': {'valor': ndsi_floral_val, 'interpretacion': interpretar_ndsi_floral(ndsi_floral_val)},
-        'lst_celsius': {'valor': lst_val, 'interpretacion': interpretar_lst(lst_val)}
-    }
+    mean_historic = get_info_safe(ndvi_historic.reduceRegion(reducer, region, scale).get('NDVI'))
+    mean_current = get_info_safe(ndvi_current.reduceRegion(reducer, region, scale).get('NDVI'))
+    mean_diff = get_info_safe(ndvi_diff.reduceRegion(reducer, region, scale).get('NDVI_diff'))
 
-    output_data = {
-        "parametros_generales": {
-            "region_coordenadas": get_info_safe(region.coordinates()),
-            "fecha_inicio": start_date,
-            "fecha_fin": end_date,
+    # --- Preparar URLs de las capas para el Mapa ---
+    ndvi_palette = ['#CE7E45', '#DF923D', '#F1B555', '#FCD163', '#99B718', '#74A901', '#66A000', '#529400', '#3E8601', '#207401', '#056201', '#004C00', '#023B01', '#012E01', '#011D01', '#011301']
+    diff_palette = ['#d7191c', '#fdae61', '#ffffbf', '#abdda4', '#2b83ba'] # Rojo, Amarillo, Verde, Azul
+
+    map_historic = ndvi_historic.getMapId({'min': 0, 'max': 1, 'palette': ndvi_palette})
+    map_current = ndvi_current.getMapId({'min': 0, 'max': 1, 'palette': ndvi_palette})
+    map_diff = ndvi_diff.getMapId({'min': -0.5, 'max': 0.5, 'palette': diff_palette})
+
+    # --- Estructurar la salida en un diccionario ---
+    output = {
+        "dashboard_data": {
+            "ndvi_historico": mean_historic,
+            "ndvi_actual": mean_current,
+            "cambio_ndvi": mean_diff,
+            "interpretacion": interpretar_cambio_ndvi(mean_diff)
         },
-        "variables_de_entrada": {
-            "descripcion": "Valores medios de reflectancia de las bandas usadas en los cálculos.",
-            "bandas_sentinel2": {
-                "NIR_B8": get_info_safe(mean_bands.get(S2_BANDS['NIR'])),
-                "ROJO_B4": get_info_safe(mean_bands.get(S2_BANDS['RED'])),
-                "VERDE_B3": get_info_safe(mean_bands.get(S2_BANDS['GREEN'])),
-                "AZUL_B2": get_info_safe(mean_bands.get(S2_BANDS['BLUE'])),
-            },
-            "constantes_formulas": {"EVI": EVI_CONSTANTS}
-        },
-        "resultados_calculados": {
-            "descripcion": "Valores medios de los índices para la región y fechas especificadas.",
-            "indices": results
+        "map_data": {
+            "centro": centro_mapa,
+            "tile_urls": {
+                "historico": map_historic['tile_fetcher'].url_format,
+                "actual": map_current['tile_fetcher'].url_format,
+                "diferencia": map_diff['tile_fetcher'].url_format
+            }
         }
     }
-    
-    return output_data
+    return output
 
-# ... (por brevedad, se asume que todo el código de análisis de la respuesta anterior está aquí)
-# ... Asegúrate de tener la función analizar_region(...) definida en este archivo.
-
-# --- CÓDIGO DE FLASK ---
-
+# ===========================================
+# 4️⃣ CONFIGURACIÓN DEL SERVIDOR FLASK
+# ===========================================
 app = Flask(__name__)
 
+# Esta ruta principal servirá el archivo HTML del frontend.
+# La crearemos en el siguiente paso.
 @app.route('/')
 def home():
-    """Ruta principal que muestra la página web al usuario."""
     return render_template('index.html')
 
-@app.route('/analizar', methods=['POST'])
-def analizar():
-    """Ruta API que recibe los datos, procesa y devuelve los resultados."""
+# Esta es la ruta API que el frontend llamará para obtener los datos.
+@app.route('/analizar-ecosistema', methods=['POST'])
+def analizar_ecosistema_endpoint():
     try:
-        # 1. Obtener los datos JSON enviados desde el frontend
         data = request.get_json()
         
-        # 2. Extraer los parámetros
-        coords = data.get('coords')
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
+        # Validación de parámetros de entrada
+        required_keys = ['coords', 'historic_start', 'historic_end', 'current_start', 'current_end']
+        if not all(key in data for key in required_keys):
+            return jsonify({"error": "Faltan parámetros en la solicitud."}), 400
 
-        # Validación simple
-        if not all([coords, start_date, end_date]):
-            return jsonify({"error": "Faltan parámetros"}), 400
-
-        # 3. Llamar a tu función de análisis de GEE
-        print(f"Iniciando análisis para {coords} desde {start_date} hasta {end_date}")
-        resultados = analizar_region(coords, start_date, end_date)
-        print("Análisis completado, enviando resultados.")
+        print(f"Iniciando análisis para la región: {data['coords']}")
         
-        # 4. Devolver los resultados como JSON
+        resultados = analizar_ecosistema(
+            coords_rectangulo=data['coords'],
+            historic_start=data['historic_start'],
+            historic_end=data['historic_end'],
+            current_start=data['current_start'],
+            current_end=data['current_end']
+        )
+        
+        print("Análisis completado. Enviando resultados al frontend.")
         return jsonify(resultados)
 
     except Exception as e:
-        print(f"Ocurrió un error en el servidor: {e}")
-        return jsonify({"error": f"Error interno del servidor: {e}"}), 500
+        print(f"Ocurrió un error en el servidor: {e}", file=sys.stderr)
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

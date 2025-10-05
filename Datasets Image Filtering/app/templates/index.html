@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Vegetación con GEE</title>
+    <title>Análisis de Ecosistemas</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,59 +19,89 @@
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>🛰️ Analizador de Cobertura Vegetal</h1>
-            <p>Introduce las coordenadas y fechas para analizar los índices de vegetación y temperatura usando datos de Sentinel-2 y MODIS.</p>
-        </header>
+    <div class="main-container">
+        <aside class="sidebar">
+            <header>
+                <h1>🛰️ Geo Analizador</h1>
+                <p>Define una región y dos períodos de tiempo para comparar la salud de la vegetación.</p>
+            </header>
 
-        <form id="analysis-form">
-            <fieldset>
-                <legend>Región de Interés (Coordenadas)</legend>
-                <div class="coord-grid">
-                    <div class="form-group">
-                        <label for="xmin">Longitud Oeste (X Mín)</label>
-                        <input type="number" id="xmin" step="any" required value="-118.6">
+            <form id="analysis-form">
+                <fieldset>
+                    <legend>1. Región de Interés</legend>
+                    <div class="coord-grid">
+                        <div class="form-group">
+                            <label for="xmin">Longitud Oeste</label>
+                            <input type="number" id="xmin" step="any" required value="-115.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="ymin">Latitud Sur</label>
+                            <input type="number" id="ymin" step="any" required value="32.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="xmax">Longitud Este</label>
+                            <input type="number" id="xmax" step="any" required value="-114.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="ymax">Latitud Norte</label>
+                            <input type="number" id="ymax" step="any" required value="33.0">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="ymin">Latitud Sur (Y Mín)</label>
-                        <input type="number" id="ymin" step="any" required value="34.4">
+                </fieldset>
+
+                <fieldset>
+                    <legend>2. Período Histórico</legend>
+                    <div class="date-grid">
+                        <div class="form-group">
+                            <label for="historic-start">Fecha de Inicio</label>
+                            <input type="date" id="historic-start" required value="2023-01-01">
+                        </div>
+                        <div class="form-group">
+                            <label for="historic-end">Fecha de Fin</label>
+                            <input type="date" id="historic-end" required value="2023-03-31">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="xmax">Longitud Este (X Máx)</label>
-                        <input type="number" id="xmax" step="any" required value="-117.8">
+                </fieldset>
+
+                <fieldset>
+                    <legend>3. Período Actual</legend>
+                    <div class="date-grid">
+                        <div class="form-group">
+                            <label for="current-start">Fecha de Inicio</label>
+                            <input type="date" id="current-start" required value="2023-04-01">
+                        </div>
+                        <div class="form-group">
+                            <label for="current-end">Fecha de Fin</label>
+                            <input type="date" id="current-end" required value="2023-04-30">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="ymax">Latitud Norte (Y Máx)</label>
-                        <input type="number" id="ymax" step="any" required value="35.0">
-                    </div>
+                </fieldset>
+
+                <button type="submit" id="submit-button">Analizar Ecosistema</button>
+                
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Procesando en GEE...</p>
                 </div>
-            </fieldset>
+            </form>
+        </aside>
 
-            <fieldset>
-                <legend>Rango de Fechas</legend>
-                <div class="date-grid">
-                    <div class="form-group">
-                        <label for="start-date">Fecha de Inicio</label>
-                        <input type="date" id="start-date" required value="2023-04-01">
-                    </div>
-                    <div class="form-group">
-                        <label for="end-date">Fecha de Fin</label>
-                        <input type="date" id="end-date" required value="2023-04-30">
-                    </div>
-                </div>
-            </fieldset>
-
-            <button type="submit" id="submit-button">Analizar Región</button>
-        </form>
-
-        <div id="loading" class="hidden">
-            <div class="spinner"></div>
-            <p>Procesando en Google Earth Engine... Esto puede tardar un momento.</p>
-        </div>
-        
-        <div id="results-container">
+        <main class="content-area">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="map-content">🗺️ Mapa</button>
+                <button class="tab-button" data-tab="dashboard-content">📊 Dashboard</button>
             </div>
+
+            <div id="map-content" class="tab-content active">
+                <div id="map"></div>
+            </div>
+
+            <div id="dashboard-content" class="tab-content">
+                <div id="dashboard-cards" class="results-grid">
+                    <p class="placeholder">Presiona "Analizar Ecosistema" para ver los resultados aquí.</p>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
