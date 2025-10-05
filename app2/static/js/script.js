@@ -5,12 +5,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const video = document.getElementById('splash-video');
 
     function hideSplash() {
-        splashScreen.style.opacity = '0';
-        setTimeout(() => {
-            splashScreen.style.display = 'none';
-            mainContent.style.display = 'block';
-        }, 1000);
-    }
+    splashScreen.style.opacity = '0';
+    setTimeout(() => {
+        splashScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+        
+        // ✨ LÍNEA AÑADIDA: Avisa al mapa que se redibuje ahora que es visible.
+        if (map) {
+            map.invalidateSize();
+        }
+
+    }, 1000);
+}
 
     video.addEventListener('ended', hideSplash);
     splashScreen.addEventListener('click', () => {
@@ -53,6 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
             views.forEach(view => view.classList.remove('active'));
             button.classList.add('active');
             document.getElementById(`${button.dataset.view}-view`).classList.add('active');
+
+            // ✨ BLOQUE AÑADIDO: Si la vista activada es el mapa, lo redibujamos.
+            if (button.dataset.view === 'map' && map) {
+                // Se usa un pequeño retraso para asegurar que el CSS se aplicó.
+                setTimeout(() => map.invalidateSize(), 10);
+            }
         });
     });
 
