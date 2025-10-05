@@ -38,7 +38,7 @@ body {
 .logo { display: flex; align-items: center; gap: 12px; }
 .logo-icon { font-size: 24px; }
 .logo h1 { font-size: 1.25rem; margin: 0; }
-.logo p { font-size: 0.75rem; color: var(--muted-foreground); margin: 0; }
+.logo p { font-size: 0.75rem; color: var(--primary); margin: 0; }
 .nav-button {
     padding: 8px 16px; border: none; background: transparent; color: var(--muted-foreground);
     cursor: pointer; font-size: 0.9rem; font-weight: 500; border-radius: 6px;
@@ -70,7 +70,7 @@ body {
     transform: translateY(0);
 }
 
-/* --- Vista de Mapa --- */
+/* --- Vista de Mapa y Barra Lateral --- */
 #map-view { display: flex; }
 .map-sidebar {
     width: 350px;
@@ -78,8 +78,27 @@ body {
     padding: 20px;
     overflow-y: auto;
     border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
-.map-sidebar h2 { margin-top: 0; }
+.sidebar-title {
+    margin: 0;
+    font-size: 1.5rem;
+}
+.filter-card {
+    background-color: var(--background);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border);
+}
+.filter-card h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1rem;
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
 #analysis-form { display: flex; flex-direction: column; gap: 16px; }
 fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
 legend { font-weight: 500; font-size: 0.9rem; padding: 0 8px; color: var(--muted-foreground); }
@@ -92,13 +111,78 @@ input {
     padding: 10px; background-color: var(--primary); color: var(--primary-foreground); border: none;
     border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.2s;
 }
-#submit-button:hover { background-color: #4ade80; } /* Verde más brillante */
+#submit-button:hover { background-color: #4ade80; }
 #submit-button:disabled { background-color: #4B5563; cursor: not-allowed; }
-#loading { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
-.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+#loading { display: none; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    /* Cambia la duración de la animación aquí */
+    animation: spin 5s linear infinite; 
+}
 .hidden { display: none; }
 #map { flex: 1; height: 100%; background-color: var(--background); }
 
+/* --- Controles de Capas (Checkboxes) --- */
+#layer-controls .placeholder {
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+    text-align: center;
+}
+.layer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    cursor: pointer;
+}
+
+/* Eliminamos 'flex: 1' que causaba la separación */
+.layer-item label {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Cambiamos el estilo de checkbox a radio button circular */
+.layer-item input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 50%; /* Lo hacemos circular */
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    display: grid;
+    place-content: center;
+}
+
+.layer-item input[type="radio"]::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: var(--primary);
+}
+
+.layer-item input[type="radio"]:checked {
+    border-color: var(--primary);
+}
+
+.layer-item input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+/* Colores específicos para cada capa */
+.layer-item[data-layer="actual"] label { color: #34D399; } /* Verde */
+.layer-item[data-layer="historico"] label { color: #A78BFA; } /* Morado */
+.layer-item[data-layer="diferencia"] label { color: #FBBF24; } /* Amarillo */ 
 /* --- Vista de Análisis --- */
 #analytics-view { padding: 24px; overflow-y: auto; }
 .analytics-header { margin-bottom: 24px; }
@@ -110,6 +194,9 @@ input {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
+}
+.key-metrics-grid .placeholder {
+    color: var(--muted-foreground);
 }
 .metric-card {
     background: var(--card);
@@ -141,4 +228,38 @@ input {
 .result-card .valor { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
 .result-card .interpretacion { font-size: 0.85rem; color: var(--foreground); }
 
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Estilo para el ícono del calendario en inputs de fecha */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    /* Invierte los colores del ícono (negro se convierte en blanco) */
+    filter: invert(0);
+}
+
+/* Contenedor para el input de fecha */
+.date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Ocultamos el ícono de calendario por defecto */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Posicionamos nuestro ícono de Font Awesome */
+.date-input-wrapper .fa-calendar-days {
+    color: white;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Evita que el ícono bloquee el clic */
+}
+
+/* Opcional: Aseguramos que el texto del input no se solape con el ícono */
+input[type="date"] {
+    padding-right: 30px; 
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3000deg); } }

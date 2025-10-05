@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- CONFIGURACIÓN ---
+     // --- CONFIGURACIÓN ---
     const MAPBOX_TOKEN = 'sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A'; // <-- REEMPLAZA ESTO
-    const MAPBOX_STYLE_URL = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`;
-    const MAPBOX_ATTRIBUTION = '© Mapbox';
+    const MAPBOX_STYLE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`;
+    const MAPBOX_ATTRIBUTION = '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>';
 
     // --- ELEMENTOS DEL DOM ---
     const navButtons = document.querySelectorAll('.nav-button');
@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingIndicator = document.getElementById('loading');
     const keyMetricsContainer = document.getElementById('key-metrics');
     const detailedDashboardContainer = document.getElementById('detailed-dashboard');
+    const layerControlsContainer = document.getElementById('layer-controls');
 
     // --- ESTADO DE LA APLICACIÓN ---
     let map;
-    let layerControl;
     let geeLayers = {};
 
     // ===========================================
@@ -26,18 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         map = L.map('map', { zoomControl: false }).setView([32.62, -115.46], 10);
         L.tileLayer(MAPBOX_STYLE_URL, { attribution: MAPBOX_ATTRIBUTION, tileSize: 512, zoomOffset: -1 }).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        layerControl = L.control.layers(null, null, { collapsed: false, position: 'topright' }).addTo(map);
     }
     
     function handleViewChange(viewId) {
-        // Actualizar botones de navegación
-        navButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.view === viewId);
-        });
-        // Actualizar vista activa
-        views.forEach(view => {
-            view.classList.toggle('active', view.id === `${viewId}-view`);
-        });
+        navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
+        views.forEach(view => view.classList.toggle('active', view.id === `${viewId}-view`));
     }
 
     navButtons.forEach(button => {
@@ -50,13 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. LLAMADA A LA API Y MANEJO DE DATOS
     // ===========================================
     form.addEventListener('submit', async (event) => {
+        // Previene que la página se recargue al enviar el formulario
         event.preventDefault();
         
+        // --- 1. Prepara la interfaz para la carga ---
         submitButton.disabled = true;
-        loadingIndicator.classList.remove('hidden');
-        keyMetricsContainer.innerHTML = '<h3>Cargando métricas...</h3>';
-        detailedDashboardContainer.innerHTML = '<h3>Cargando datos detallados...</h3>';
+        loadingIndicator.classList.remove('hidden'); // Muestra el spinner
+        keyMetricsContainer.innerHTML = '<p class="placeholder">Cargando métricas...</p>';
+        detailedDashboardContainer.innerHTML = '';
+        layerControlsContainer.innerHTML = '<p class="placeholder">Generando capas...</p>';
 
+        // --- 2. Reúne todos los datos del formulario ---
         const payload = {
             coords: [
                 parseFloat(document.getElementById('xmin').value),
@@ -70,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             current_end: document.getElementById('current-end').value
         };
 
+        // --- 3. Llama al servidor y espera la respuesta ---
         try {
             const response = await fetch('/analizar-completo', {
                 method: 'POST',
@@ -77,18 +75,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error((await response.json()).error || 'Error en el servidor.');
+            // Si la respuesta del servidor no es exitosa, genera un error
+            if (!response.ok) {
+                throw new Error((await response.json()).error || 'Error en el servidor.');
+            }
             
+            // Si todo fue exitoso, procesa los resultados
             const results = await response.json();
             updateMap(results.map_data);
             updateDashboard(results.dashboard_data);
 
         } catch (error) {
-            keyMetricsContainer.innerHTML = `<p style="color: #F87171;">${error.message}</p>`;
-            detailedDashboardContainer.innerHTML = '';
+            // Si ocurre cualquier error, muéstralo en la interfaz
+            keyMetricsContainer.innerHTML = `<p class="placeholder" style="color: #F87171;">${error.message}</p>`;
+            layerControlsContainer.innerHTML = '<p class="placeholder">Error al generar capas.</p>';
+            console.error("Error en el análisis:", error);
         } finally {
+            // --- 4. Limpia la interfaz sin importar el resultado ---
             submitButton.disabled = false;
-            loadingIndicator.classList.add('hidden');
+            loadingIndicator.classList.add('hidden'); // Oculta el spinner
         }
     });
 
@@ -96,34 +101,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. FUNCIONES DE ACTUALIZACIÓN DE LA UI
     // ===========================================
     function updateMap(mapData) {
-        Object.values(geeLayers).forEach(layer => layerControl.removeLayer(layer));
         Object.values(geeLayers).forEach(layer => map.removeLayer(layer));
 
         geeLayers.actual = L.tileLayer(mapData.tile_urls.actual, { opacity: 0.8 });
         geeLayers.historico = L.tileLayer(mapData.tile_urls.historico, { opacity: 0.8 });
         geeLayers.diferencia = L.tileLayer(mapData.tile_urls.diferencia, { opacity: 0.8 });
         
-        layerControl.addOverlay(geeLayers.actual, 'NDVI Actual');
-        layerControl.addOverlay(geeLayers.historico, 'NDVI Histórico');
-        layerControl.addOverlay(geeLayers.diferencia, 'Contraste NDVI');
-        
-        geeLayers.diferencia.addTo(map);
+        generateLayerControls();
         map.flyTo(mapData.centro, 10);
+    }
+    
+    function generateLayerControls() {
+        const layersConfig = [
+            { id: 'diferencia', name: 'Contraste NDVI', checked: true },
+            { id: 'actual', name: 'NDVI Actual', checked: false },
+            { id: 'historico', name: 'NDVI Histórico', checked: false }
+        ];
+
+        layerControlsContainer.innerHTML = ''; // Limpiar controles
+        
+        layersConfig.forEach(config => {
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item';
+            layerItem.dataset.layer = config.id;
+
+            // Usamos 'radio' en lugar de 'checkbox'
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.id = `radio-${config.id}`;
+            radio.name = 'layer-selection'; // El mismo 'name' los agrupa
+            radio.value = config.id;
+            radio.checked = config.checked;
+            
+            const label = document.createElement('label');
+            label.htmlFor = `radio-${config.id}`;
+            label.textContent = config.name;
+
+            layerItem.appendChild(radio);
+            layerItem.appendChild(label);
+            layerControlsContainer.appendChild(layerItem);
+
+            // Añadir capa al mapa si está marcada por defecto
+            if (config.checked) {
+                map.addLayer(geeLayers[config.id]);
+            }
+
+            // El evento ahora maneja la lógica de radio-button
+            radio.addEventListener('change', (e) => {
+                // Primero, quitamos todas las capas del mapa
+                Object.values(geeLayers).forEach(layer => map.removeLayer(layer));
+                // Luego, añadimos solo la capa seleccionada
+                if (e.target.checked) {
+                    map.addLayer(geeLayers[e.target.value]);
+                }
+            });
+        });
     }
 
     function updateDashboard(data) {
         const formatValue = (val, decimals = 4) => (val !== null && val !== undefined) ? parseFloat(val).toFixed(decimals) : 'N/A';
         const change = data.comparativo.cambio_ndvi.valor;
-        const changeClass = change > 0 ? 'up' : 'down';
+        const changeClass = change > 0.01 ? 'up' : change < -0.01 ? 'down' : '';
         const changeSign = change > 0 ? '+' : '';
 
-        // --- Actualizar Métricas Clave ---
         keyMetricsContainer.innerHTML = `
             <div class="metric-card">
                 <div class="metric-card-header"><span>NDVI Actual</span></div>
                 <div class="metric-card-body"><div class="value">${formatValue(data.actual.ndvi.valor)}</div></div>
                 <div class="metric-card-footer ${changeClass}">
-                    <span>${changeSign}${formatValue(change)}</span>
+                    <span>${change ? `${changeSign}${formatValue(change)}` : '-'}</span>
                     <span>vs. histórico</span>
                 </div>
             </div>
@@ -144,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // --- Actualizar Dashboard Detallado ---
         detailedDashboardContainer.innerHTML = `
             <h2>Dashboard Detallado</h2>
             <div class="results-grid">
@@ -160,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="result-card">
                     <h3>Cambio Neto de NDVI</h3>
-                    <p class="valor ${changeClass}">${changeSign}${formatValue(change)}</p>
+                    <p class="valor ${changeClass}">${change ? `${changeSign}${formatValue(change)}` : 'N/A'}</p>
                     <p class="interpretacion">${data.comparativo.cambio_ndvi.interpretacion}</p>
                 </div>
                 <div class="result-card">
