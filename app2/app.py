@@ -12,7 +12,7 @@ try:
     print("✅ Google Earth Engine inicializado correctamente.")
 except Exception as e:
     print("🪪 Autenticando con Google Earth Engine...")
-    ee.Authenticate()
+    ee.Authenticate()   
     ee.Initialize(project='super-bloom')
     print("✅ Autenticación completada.")
 
