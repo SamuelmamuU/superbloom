@@ -1,16 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-
     const splashScreen = document.getElementById('splash-screen');
     const mainContent = document.getElementById('main-content');
     const video = document.getElementById('splash-video');
 
     function hideSplash() {
-        splashScreen.style.opacity = '0'; // comienza el desvanecimiento
+        splashScreen.style.opacity = '0';
         setTimeout(() => {
-            splashScreen.style.display = 'none'; // al terminar la transición, ocultar completamente
+            splashScreen.style.display = 'none';
             mainContent.style.display = 'block';
-        }, 1000); // mismo tiempo que la transición CSS
+        }, 1000);
     }
 
     video.addEventListener('ended', hideSplash);
@@ -18,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         video.pause();
         hideSplash();
     });
-
-
 
     // --- CONFIGURACIÓN ---
     const MAPBOX_TOKEN = 'sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A';
@@ -34,10 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const keyMetricsContainer = document.getElementById('key-metrics');
     const detailedDashboardContainer = document.getElementById('detailed-dashboard');
     const layerGroupsContainer = document.getElementById('layer-groups-container');
+    const chartsContainer = document.getElementById('charts-container'); // Contenedor de gráficas
 
     // --- ESTADO DE LA APLICACIÓN ---
     let map;
-    let geeLayers = {}; // Almacenará todas las capas GEE por variable y período
+    let geeLayers = {};
+    let chartInstances = {}; // ✨ Almacenará las instancias de las gráficas
 
     // ===========================================
     // 1. INICIALIZACIÓN Y MANEJO DE VISTAS
@@ -68,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keyMetricsContainer.innerHTML = '<p class="placeholder">Cargando métricas...</p>';
         detailedDashboardContainer.innerHTML = '';
         layerGroupsContainer.innerHTML = '<p class="placeholder">Generando capas...</p>';
+        chartsContainer.style.display = 'none'; // Ocultar gráficas mientras carga
 
         const payload = {
             coords: [
@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const results = await response.json();
             updateMap(results.map_data);
             updateDashboard(results.dashboard_data);
+            updateCharts(results.chart_data); // ✨ LLAMAR A LA NUEVA FUNCIÓN
         } catch (error) {
             keyMetricsContainer.innerHTML = `<p class="placeholder" style="color: #F87171;">${error.message}</p>`;
             layerGroupsContainer.innerHTML = '<p class="placeholder">Error al generar capas.</p>';
@@ -98,6 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===========================================
     // 3. FUNCIONES DE ACTUALIZACIÓN DE LA UI
     // ===========================================
+    
+    // ... (Las funciones updateMap, generateLayerControls y updateVisibleLayer no cambian) ...
     function updateMap(mapData) {
         Object.values(geeLayers).flat().forEach(layer => map.removeLayer(layer));
         geeLayers = {}; // Reset
@@ -230,5 +233,78 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
-});
 
+    // ===========================================
+    // 4. ✨ NUEVA FUNCIÓN PARA LAS GRÁFICAS
+    // ===========================================
+    function updateCharts(chartData) {
+        chartsContainer.style.display = 'block'; // Mostrar el contenedor de gráficas
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: { color: '#9CA3AF' },
+                    grid: { color: '#374151' }
+                },
+                x: {
+                    ticks: { color: '#9CA3AF' },
+                    grid: { color: '#374151' }
+                }
+            }
+        };
+
+        // Gráfica de NDVI
+        createBarChart('ndvi-chart', {
+            labels: chartData.comparative_charts.ndvi.labels,
+            datasets: [{
+                label: 'NDVI',
+                data: chartData.comparative_charts.ndvi.datasets[0].data,
+                backgroundColor: '#34D399',
+                borderRadius: 4,
+                barPercentage: 0.6
+            }]
+        }, commonOptions);
+
+        // Gráfica de Temperatura
+        createBarChart('temperatura-chart', {
+            labels: chartData.comparative_charts.temperature.labels,
+            datasets: [{
+                label: 'Temperatura',
+                data: chartData.comparative_charts.temperature.datasets[0].data,
+                backgroundColor: '#FBBF24',
+                borderRadius: 4,
+                barPercentage: 0.6
+            }]
+        }, commonOptions);
+
+        // Gráfica de Precipitación
+        createBarChart('precipitacion-chart', {
+            labels: chartData.comparative_charts.precipitation.labels,
+            datasets: [{
+                label: 'Precipitación',
+                data: chartData.comparative_charts.precipitation.datasets[0].data,
+                backgroundColor: '#60A5FA',
+                borderRadius: 4,
+                barPercentage: 0.6
+            }]
+        }, commonOptions);
+    }
+
+    function createBarChart(canvasId, data, options) {
+        // Si ya existe una gráfica en este canvas, la destruimos antes de crear la nueva
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
+        }
+        
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        chartInstances[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: options
+        });
+    }
+});

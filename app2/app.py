@@ -139,9 +139,6 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
     resultados_vals = {}
     resultados_maps = {}
 
-    # ===========================================
-    # Ejecutar todas las consultas en paralelo
-    # ===========================================
     with ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(analizar_ndvi, region, s2_collection, h_start, h_end, c_start, c_end): 'ndvi',
@@ -158,9 +155,6 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
             except Exception as e:
                 print(f"Error en {key}: {e}", file=sys.stderr)
 
-    # ===========================================
-    # EVI y NDSI (pueden ejecutarse en el hilo principal)
-    # ===========================================
     img_current = s2_collection.filterDate(c_start, c_end).map(mask_s2_clouds).median().clip(region)
     evi_current = img_current.expression(
         'G * ((NIR - RED) / (NIR + C1 * RED - C2 * BLUE + L))',
@@ -171,6 +165,38 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
     reducer_mean = ee.Reducer.mean()
     resultados_vals['evi_c'] = get_info_safe(evi_current.reduceRegion(reducer_mean, region, 100).get('EVI'))
     resultados_vals['ndsi_c'] = get_info_safe(ndsi_floral_current.reduceRegion(reducer_mean, region, 100).get('NDSI_floral'))
+
+    # ✨ NUEVA SECCIÓN: PREPARAR DATOS PARA GRÁFICAS ✨
+    chart_data = {
+        "comparative_charts": {
+            "ndvi": {
+                "labels": ["Histórico", "Actual"],
+                "datasets": [{
+                    "label": "NDVI",
+                    "data": [resultados_vals.get('ndvi_h'), resultados_vals.get('ndvi_c')]
+                }]
+            },
+            "temperature": {
+                "labels": ["Histórico (°C)", "Actual (°C)"],
+                "datasets": [{
+                    "label": "Temperatura",
+                    "data": [resultados_vals.get('lst_h'), resultados_vals.get('lst_c')]
+                }]
+            },
+            "precipitation": {
+                "labels": ["Histórico (mm)", "Actual (mm)"],
+                "datasets": [{
+                    "label": "Precipitación",
+                    "data": [resultados_vals.get('precip_h'), resultados_vals.get('precip_c')]
+                }]
+            }
+        },
+        "gauge_charts": {
+            "ndvi": {"valor": resultados_vals.get('ndvi_c')},
+            "evi": {"valor": resultados_vals.get('evi_c')},
+            "ndsi_floral": {"valor": resultados_vals.get('ndsi_c')}
+        }
+    }
 
     return {
         "map_data": {"centro": [region.centroid().coordinates().get(1).getInfo(),
@@ -192,7 +218,8 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
                 "precipitacion_historica": {"valor": resultados_vals.get('precip_h')},
                 "cambio_precipitacion_rel": {"valor": resultados_vals.get('precip_d'), "interpretacion": interpretar_cambio(resultados_vals.get('precip_d'), 0.5, 0.1, 'precipitación')}
             }
-        }
+        },
+        "chart_data": chart_data # <-- Se añade el nuevo objeto a la respuesta
     }
 
 # ===========================================

@@ -51,7 +51,8 @@ body {
     transition: all 0.2s ease;
 }
 .nav-button:hover { background-color: rgba(255,255,255,0.1); color: var(--foreground); }
-.nav-button.active { background-color: var(--primary); color: var(--primary-foreground); }.status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted-foreground); }
+.nav-button.active { background-color: var(--primary); color: var(--primary-foreground); }
+.status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted-foreground); }
 .status-indicator { width: 8px; height: 8px; background-color: var(--primary); border-radius: 50%; }
 
 /* --- Contenedor de Vistas --- */
@@ -207,4 +208,35 @@ body, html {
     padding: 0;
     height: 100%;
     width: 100%;
+}
+
+
+/* --- ✨ NUEVOS ESTILOS PARA GRÁFICAS ✨ --- */
+#charts-container {
+    margin-top: 24px;
+}
+#charts-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 16px;
+}
+.chart-card {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+}
+.chart-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+}
+.chart-wrapper {
+    position: relative;
+    height: 250px; /* Altura fija para las gráficas */
 }
