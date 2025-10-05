@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoMap - Análisis Ambiental</title>
+    <title>Bosón De Quásar</title>
     
-    <!-- Librería de Gráficas (Chart.js) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -23,10 +22,10 @@
     <div class="app-container">
         <nav class="main-nav">
             <div class="logo">
-                <div class="logo-icon"><i class="fa-solid fa-seedling"></i></div>
+                <div class="logo-icon"><img src="../static/css/LogoBoson.png" alt="Logo Bosón" class="logo-img"></i></div>
                 <div>
-                    <h1>EcoMap</h1>
-                    <p>Sistema de Análisis Ambiental</p>
+                    <h1>Bosón De Quásar</h1>
+                    <p>Sistema de floración</p>
                 </div>
             </div>
             <div class="nav-buttons">
@@ -110,34 +109,37 @@
                 </div>
 
                 <div id="detailed-dashboard">
-                     <!-- El dashboard detallado se insertará aquí -->
-                </div>
+                     </div>
 
-                <!-- NUEVA SECCIÓN PARA GRÁFICAS -->
-                <div id="charts-container" class="charts-container">
-                    <h2>Evolución Histórica (Últimos 4 Años)</h2>
-                    <div class="charts-grid">
+                <div id="charts-container">
+                    <div id="charts-grid" class="charts-grid">
                         <div class="chart-card">
-                            <h3>Tendencia de Vegetación (NDVI)</h3>
+                            <h3>Balance Ecosistema</h3>
                             <div class="chart-wrapper">
-                                <canvas id="ndvi-chart"></canvas>
+                                <canvas id="radarChart"></canvas>
                             </div>
                         </div>
                         <div class="chart-card">
-                            <h3>Tendencia de Temperatura (LST)</h3>
+                            <h3>Vegetación (NDVI)</h3>
                             <div class="chart-wrapper">
-                                <canvas id="temperatura-chart"></canvas>
+                                <canvas id="ndviBarChart"></canvas>
                             </div>
                         </div>
                         <div class="chart-card">
-                            <h3>Precipitación Mensual Acumulada</h3>
+                            <h3>Temperatura (°C)</h3>
                             <div class="chart-wrapper">
-                                <canvas id="precipitacion-chart"></canvas>
+                                <canvas id="tempBarChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Precipitación (mm)</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="precipBarChart"></canvas>
                             </div>
                         </div>
                     </div>
+                    <p id="charts-placeholder" class="placeholder" style="display: none;">No hay datos para mostrar las gráficas.</p>
                 </div>
-
             </div>
         </main>
     </div>
@@ -145,4 +147,3 @@
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
-

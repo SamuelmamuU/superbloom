@@ -21,7 +21,7 @@ except Exception as e:
 
 # --- Constantes de Colecciones y Bandas ---
 S2_COLLECTION = 'COPERNICUS/S2_SR_HARMONIZED'
-LST_COLLECTION = 'MODIS/061/MOD11A2' # Usamos la de 8 días para mayor cobertura
+LST_COLLECTION = 'MODIS/061/MOD11A2'
 GPM_COLLECTION = 'NASA/GPM_L3/IMERG_V06'
 S2_BANDS = {'NIR': 'B8', 'RED': 'B4', 'GREEN': 'B3', 'BLUE': 'B2', 'SCL': 'SCL'}
 EVI_CONSTANTS = {"G": 2.5, "L": 1, "C1": 6, "C2": 7.5}
@@ -36,12 +36,20 @@ def to_celsius(img):
     lst = img.select('LST_Day_1km').multiply(0.02).subtract(273.15).rename('LST')
     return img.addBands(lst)
 
-# --- Funciones de Interpretación ---
+# --- Funciones de Interpretación y Gráficas ---
 def get_info_safe(ee_object, default_value=None):
     try: return ee_object.getInfo()
     except ee.EEException as e:
         print(f"Error GEE: {e}", file=sys.stderr)
         return default_value
+
+def _normalize(value, min_val, max_val):
+    """Normaliza un valor a una escala de 0 a 1."""
+    if value is None:
+        return 0
+    # Asegura que el valor esté dentro del rango para evitar resultados > 1 o < 0
+    value = max(min(value, max_val), min_val)
+    return (value - min_val) / (max_val - min_val)
 
 def interpretar_cambio(valor, umbral_alto=0.1, umbral_bajo=0.02, tipo=""):
     if valor is None: return "No se pudo calcular."
@@ -96,7 +104,6 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
     reducer_mean = ee.Reducer.mean()
     scale = 100
     
-    # Valores numéricos
     vals = {
         'ndvi_c': get_info_safe(ndvi_current.reduceRegion(reducer_mean, region, scale).get('NDVI')),
         'ndvi_h': get_info_safe(ndvi_historic.reduceRegion(reducer_mean, region, scale).get('NDVI')),
@@ -124,12 +131,75 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
             'diferencia': lst_diff.getMapId({'min': -5, 'max': 5, 'palette': ['blue', 'white', 'red']})['tile_fetcher'].url_format
         },
         'precipitacion': {
-            'actual': precip_current.getMapId({'min': 0, 'max': 50, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
-            'historico': precip_historic.getMapId({'min': 0, 'max': 50, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
+            'actual': precip_current.getMapId({'min': 0, 'max': 100, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
+            'historico': precip_historic.getMapId({'min': 0, 'max': 100, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
             'diferencia': precip_diff_rel.getMapId({'min': -1, 'max': 1, 'palette': ['red', 'white', 'blue']})['tile_fetcher'].url_format
         }
     }
     
+    # --- 📊 PREPARACIÓN DE DATOS PARA GRÁFICAS ---
+    chart_data = {
+        "bar_charts": {
+            "ndvi": {
+                "labels": ["Histórico", "Actual"],
+                "datasets": [{
+                    "label": "NDVI",
+                    "data": [vals.get('ndvi_h') or 0, vals.get('ndvi_c') or 0],
+                    "backgroundColor": ["rgba(255, 159, 64, 0.5)", "rgba(75, 192, 192, 0.5)"],
+                    "borderColor": ["rgb(255, 159, 64)", "rgb(75, 192, 192)"],
+                    "borderWidth": 1
+                }]
+            },
+            "temperatura": {
+                "labels": ["Histórico", "Actual"],
+                "datasets": [{
+                    "label": "Temperatura (°C)",
+                    "data": [vals.get('lst_h') or 0, vals.get('lst_c') or 0],
+                    "backgroundColor": ["rgba(54, 162, 235, 0.5)", "rgba(255, 99, 132, 0.5)"],
+                    "borderColor": ["rgb(54, 162, 235)", "rgb(255, 99, 132)"],
+                    "borderWidth": 1
+                }]
+            },
+            "precipitacion": {
+                "labels": ["Histórico", "Actual"],
+                "datasets": [{
+                    "label": "Precipitación Acumulada (mm)",
+                    "data": [vals.get('precip_h') or 0, vals.get('precip_c') or 0],
+                    "backgroundColor": ["rgba(201, 203, 207, 0.5)", "rgba(153, 102, 255, 0.5)"],
+                    "borderColor": ["rgb(201, 203, 207)", "rgb(153, 102, 255)"],
+                    "borderWidth": 1
+                }]
+            }
+        },
+        "radar_chart": {
+            "labels": ["Vegetación (NDVI)", "Temperatura", "Precipitación"],
+            "datasets": [
+                {
+                    "label": "Histórico",
+                    "data": [
+                        _normalize(vals.get('ndvi_h'), -0.2, 1),
+                        _normalize(vals.get('lst_h'), 0, 50),
+                        _normalize(vals.get('precip_h'), 0, 500)
+                    ],
+                    "fill": True,
+                    "backgroundColor": "rgba(255, 159, 64, 0.2)",
+                    "borderColor": "rgb(255, 159, 64)",
+                },
+                {
+                    "label": "Actual",
+                    "data": [
+                        _normalize(vals.get('ndvi_c'), -0.2, 1),
+                        _normalize(vals.get('lst_c'), 0, 50),
+                        _normalize(vals.get('precip_c'), 0, 500)
+                    ],
+                    "fill": True,
+                    "backgroundColor": "rgba(75, 192, 192, 0.2)",
+                    "borderColor": "rgb(75, 192, 192)",
+                }
+            ]
+        }
+    }
+
     # --- ESTRUCTURAR LA SALIDA FINAL ---
     output = {
         "map_data": {"centro": centro_mapa, "tile_urls": map_urls},
@@ -149,7 +219,8 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
                 "precipitacion_historica": {"valor": vals['precip_h']},
                 "cambio_precipitacion_rel": {"valor": vals['precip_d'], "interpretacion": interpretar_cambio(vals['precip_d'], 0.5, 0.1, 'precipitación')}
             }
-        }
+        },
+        "chart_data": chart_data
     }
     return output
 

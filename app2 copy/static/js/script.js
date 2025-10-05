@@ -12,34 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const keyMetricsContainer = document.getElementById('key-metrics');
     const detailedDashboardContainer = document.getElementById('detailed-dashboard');
     const layerGroupsContainer = document.getElementById('layer-groups-container');
+    const chartsGrid = document.getElementById('charts-grid');
+    const chartsPlaceholder = document.getElementById('charts-placeholder');
 
     // --- ESTADO DE LA APLICACIÓN ---
     let map;
-    let geeLayers = {}; // Almacenará todas las capas GEE por variable y período
-    window.currentBounds = null; // Bounds del mapa
+    let geeLayers = {};
+    let charts = {}; // Objeto para almacenar instancias de Chart.js
+
+    // --- CONFIGURACIÓN GLOBAL DE CHART.JS PARA TEMA OSCURO ---
+    Chart.defaults.color = '#9CA3AF'; // Color de texto por defecto
+    Chart.defaults.borderColor = '#374151'; // Color de las líneas de la cuadrícula
 
     // ===========================================
     // 1. INICIALIZACIÓN Y MANEJO DE VISTAS
     // ===========================================
-    function initMap(bounds) {
-        // Calcular centro a partir de bounds
-        const centerLat = (bounds[0][0] + bounds[1][0]) / 2;
-        const centerLon = (bounds[0][1] + bounds[1][1]) / 2;
-
-        map = L.map('map', { 
-            zoomControl: false,
-            maxBounds: bounds,          // Limita el arrastre al área de la capa
-            maxBoundsViscosity: 1.0     // Evita que se salga del área
-        }).setView([centerLat, centerLon], 10);
-
-        // Capa base
-        L.tileLayer(MAPBOX_STYLE_URL, { 
-            attribution: MAPBOX_ATTRIBUTION, 
-            tileSize: 512, 
-            zoomOffset: -1 
-        }).addTo(map);
-
-        // Control de zoom
+    function initMap() {
+        map = L.map('map', { zoomControl: false }).setView([25.7, -100.3], 10);
+        L.tileLayer(MAPBOX_STYLE_URL, { attribution: MAPBOX_ATTRIBUTION, tileSize: 512, zoomOffset: -1 }).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
     }
     
@@ -52,8 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Inicializar mapa con bounds temporales (se actualizarán después)
-    initMap([[0, 0], [0, 0]]);
+    initMap();
 
     // ===========================================
     // 2. LLAMADA A LA API Y MANEJO DE DATOS
@@ -64,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keyMetricsContainer.innerHTML = '<p class="placeholder">Cargando métricas...</p>';
         detailedDashboardContainer.innerHTML = '';
         layerGroupsContainer.innerHTML = '<p class="placeholder">Generando capas...</p>';
+        clearCharts(); // Limpiar gráficas anteriores
 
         const payload = {
             coords: [
@@ -74,15 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             current_start: document.getElementById('current-start').value, current_end: document.getElementById('current-end').value
         };
 
-        // Guardar bounds globalmente para maxBounds
-        window.currentBounds = [
-            [payload.coords[1], payload.coords[0]], // [ymin, xmin]
-            [payload.coords[3], payload.coords[2]]  // [ymax, xmax]
-        ];
-
-        // Re-inicializar mapa con bounds reales
-        initMap(window.currentBounds);
-
         try {
             const response = await fetch('/analizar-avanzado', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -92,9 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const results = await response.json();
             updateMap(results.map_data);
             updateDashboard(results.dashboard_data);
+            updateCharts(results.chart_data);
         } catch (error) {
             keyMetricsContainer.innerHTML = `<p class="placeholder" style="color: #F87171;">${error.message}</p>`;
             layerGroupsContainer.innerHTML = '<p class="placeholder">Error al generar capas.</p>';
+            chartsPlaceholder.textContent = 'Error al generar las gráficas.';
+            chartsPlaceholder.style.display = 'block';
         } finally {
             submitButton.disabled = false;
         }
@@ -104,28 +88,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. FUNCIONES DE ACTUALIZACIÓN DE LA UI
     // ===========================================
     function updateMap(mapData) {
-        // Eliminar capas anteriores
-        Object.values(geeLayers).flat().forEach(layer => map.removeLayer(layer));
-        geeLayers = {}; // Reset
+        Object.values(geeLayers).flat().forEach(layer => {
+            if(map.hasLayer(layer)) map.removeLayer(layer)
+        });
+        geeLayers = {};
 
-        // Crear nuevas capas con opacidad 0.5
         for (const variable in mapData.tile_urls) {
             geeLayers[variable] = {};
             for (const periodo in mapData.tile_urls[variable]) {
-                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.5 });
+                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.7 });
             }
         }
-
-        // Generar controles de capas
+        
         generateLayerControls();
-
-        // Ajustar el centro del mapa
         map.flyTo(mapData.centro, 10);
-
-        // Aplicar bounds máximos
-        if (window.currentBounds) {
-            map.setMaxBounds(window.currentBounds);
-        }
     }
     
     function generateLayerControls() {
@@ -140,17 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'precipitacion-actual', name: 'Precip. Actual', variable: 'precipitacion', period: 'actual', checked: false },
             { id: 'precipitacion-historico', name: 'Precip. Histórica', variable: 'precipitacion', period: 'historico', checked: false },
         ];
-
-        layerGroupsContainer.innerHTML = ''; // Limpiar
+        layerGroupsContainer.innerHTML = '';
         const grid = document.createElement('div');
         grid.className = 'layer-grid';
-
         layersConfig.forEach(config => {
             const label = document.createElement('label');
             label.className = 'layer-grid-item';
             label.htmlFor = `radio-${config.id}`;
             label.dataset.variable = config.variable;
-
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.id = `radio-${config.id}`;
@@ -158,17 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
             radio.value = `${config.variable}-${config.period}`;
             radio.checked = config.checked;
             radio.className = 'layer-radio-hidden';
-
             const nameSpan = document.createElement('span');
             nameSpan.textContent = config.name;
-
             label.appendChild(radio);
             label.appendChild(nameSpan);
             grid.appendChild(label);
-
             radio.addEventListener('change', updateVisibleLayer);
         });
-
         layerGroupsContainer.appendChild(grid);
         updateVisibleLayer();
     }
@@ -176,17 +145,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateVisibleLayer() {
         const selectedRadio = document.querySelector('input[name="layer-selection"]:checked');
         if (!selectedRadio) return;
-
         const [variable, period] = selectedRadio.value.split('-');
-        
-        // Ocultar todas las capas
         Object.values(geeLayers).forEach(variableLayers => {
             Object.values(variableLayers).forEach(layer => {
                 if (map.hasLayer(layer)) map.removeLayer(layer);
             });
         });
-
-        // Mostrar solo la capa seleccionada
         if (geeLayers[variable] && geeLayers[variable][period]) {
             map.addLayer(geeLayers[variable][period]);
         }
@@ -238,4 +202,88 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
+
+    // ===========================================
+    // 4. FUNCIONES DE CREACIÓN DE GRÁFICAS
+    // ===========================================
+    function clearCharts() {
+        Object.values(charts).forEach(chart => chart.destroy());
+        charts = {};
+        chartsGrid.style.display = 'none';
+        chartsPlaceholder.style.display = 'block';
+        chartsPlaceholder.textContent = 'Ejecuta un análisis para ver las gráficas.';
+    }
+
+    function updateCharts(chartData) {
+        chartsGrid.style.display = 'grid';
+        chartsPlaceholder.style.display = 'none';
+
+        createRadarChart('radarChart', chartData.radar_chart);
+        createBarChart('ndviBarChart', chartData.bar_charts.ndvi);
+        createBarChart('tempBarChart', chartData.bar_charts.temperatura);
+        createBarChart('precipBarChart', chartData.bar_charts.precipitacion);
+    }
+
+    function createBarChart(canvasId, data) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (charts[canvasId]) charts[canvasId].destroy();
+        charts[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
+                    }
+                }
+            }
+        });
+    }
+
+
+
+    function createRadarChart(canvasId, data) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (charts[canvasId]) charts[canvasId].destroy();
+        charts[canvasId] = new Chart(ctx, {
+            type: 'radar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { font: { size: 10 } }
+                    },
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 1,
+                        grid: { color: '#374151' },
+                        angleLines: { color: '#374151' },
+                        pointLabels: {
+                            font: { size: 12 },
+                            color: '#9CA3AF'
+                        },
+                        ticks: { display: false, backdropColor: 'transparent' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Estado inicial de las gráficas
+    clearCharts();
 });

@@ -40,6 +40,11 @@ body {
 .logo-icon i { font-size: 24px; color: var(--foreground); }
 .logo h1 { font-size: 1.25rem; margin: 0; }
 .logo p { font-size: 0.75rem; color: var(--muted-foreground); margin: 0; }
+.logo-icon img.logo-img {
+    width: 80px; /* Ajusta según el tamaño que necesites */
+    height: auto;
+}
+
 .nav-button {
     padding: 8px 16px; border: none; background: transparent; color: var(--muted-foreground);
     cursor: pointer; font-size: 0.9rem; font-weight: 500; border-radius: 6px;
@@ -174,3 +179,31 @@ input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-a
 }
 input[type="date"] { padding-right: 30px; }
 
+/* --- ESTILOS DE GRÁFICAS (MODIFICADOS) --- */
+#charts-container {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas iguales */
+    gap: 16px;
+}
+.chart-card {
+    background-color: transparent; /* Fondo transparente */
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border); /* Borde sutil */
+}
+.chart-card h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem; /* Título más pequeño */
+    color: var(--muted-foreground);
+    font-weight: 400; /* Fuente más delgada */
+    text-align: center;
+}
+.chart-wrapper {
+    position: relative;
+    height: 240px; /* Altura reducida para un look más "delgado" */
+}
