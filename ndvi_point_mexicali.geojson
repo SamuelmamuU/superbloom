@@ -1,8 +1,7 @@
 {
 "type": "FeatureCollection",
 "name": "ndvi_point_mexicali",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
-{ "type": "Feature", "properties": { "date": "2023-04-01", "ndvi": 0.0045478921383619308 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
+{ "type": "Feature", "properties": { "historic": 0.010858834721148014, "current": -0.00047885076492093503, "diff": -0.011337685486068949 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
 ]
 }
