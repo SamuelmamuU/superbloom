@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_93b88c04a68888c8977f2063743bbc43 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    
+                    <style>
+                        .foliumtooltip {
+                            
+                        }
+                       .foliumtooltip table{
+                            margin: auto;
+                        }
+                        .foliumtooltip tr{
+                            text-align: left;
+                        }
+                        .foliumtooltip th{
+                            padding: 2px; padding-right: 8px;
+                        }
+                    </style>
+            
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_93b88c04a68888c8977f2063743bbc43" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_93b88c04a68888c8977f2063743bbc43 = L.map(
+                "map_93b88c04a68888c8977f2063743bbc43",
+                {
+                    center: [32.624, -115.466],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 10,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_7179e79787d3c486f2834046c8f11fb3 = L.tileLayer(
+                "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Mapbox",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_7179e79787d3c486f2834046c8f11fb3.addTo(map_93b88c04a68888c8977f2063743bbc43);
+        
+    
+            var tile_layer_6b99209c2367ac8cf5f7eb1279c3c89e = L.tileLayer(
+                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/c2c4f15db2b109cf4b9997b54944aab4-e386938d2393cf3e0b1a4bc05cbbca98/tiles/{z}/{x}/{y}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Google Earth Engine",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 0.7,
+}
+
+            );
+        
+    
+            tile_layer_6b99209c2367ac8cf5f7eb1279c3c89e.addTo(map_93b88c04a68888c8977f2063743bbc43);
+        
+    
+
+        function geo_json_d8ff762093ed24a55fa05aaa5274edb5_onEachFeature(feature, layer) {
+
+            layer.on({
+            });
+        };
+        var geo_json_d8ff762093ed24a55fa05aaa5274edb5 = L.geoJson(null, {
+                onEachFeature: geo_json_d8ff762093ed24a55fa05aaa5274edb5_onEachFeature,
+            
+            ...{
+}
+        });
+
+        function geo_json_d8ff762093ed24a55fa05aaa5274edb5_add (data) {
+            geo_json_d8ff762093ed24a55fa05aaa5274edb5
+                .addData(data);
+        }
+            geo_json_d8ff762093ed24a55fa05aaa5274edb5_add({"features": [{"geometry": {"coordinates": [-115.466, 32.624], "type": "Point"}, "properties": {"date": "2023-04-01", "ndvi": 0.00346204312518239}, "type": "Feature"}], "name": "ndvi_point_mexicali", "type": "FeatureCollection"});
+        geo_json_d8ff762093ed24a55fa05aaa5274edb5.setStyle(function(feature) {return feature.properties.style;});
+
+        
+    
+    geo_json_d8ff762093ed24a55fa05aaa5274edb5.bindTooltip(
+    function(layer){
+    let div = L.DomUtil.create('div');
+    
+    let handleObject = feature => {
+        if (feature === null) {
+            return '';
+        } else if (typeof(feature)=='object') {
+            return JSON.stringify(feature);
+        } else {
+            return feature;
+        }
+    }
+    let fields = ["date", "ndvi"];
+    let aliases = ["date", "ndvi"];
+    let table = '<table>' +
+        String(
+        fields.map(
+        (v,i)=>
+        `<tr>
+            <th>${aliases[i]}</th>
+            
+            <td>${handleObject(layer.feature.properties[v])}</td>
+        </tr>`).join(''))
+    +'</table>';
+    div.innerHTML=table;
+    
+    return div
+    }
+    ,{
+  "sticky": true,
+  "className": "foliumtooltip",
+});
+                     
+    
+            geo_json_d8ff762093ed24a55fa05aaa5274edb5.addTo(map_93b88c04a68888c8977f2063743bbc43);
+        
+    
+            var layer_control_acec2d97b95eb269236e5e56ff36f3c6_layers = {
+                base_layers : {
+                    "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=sk.eyj1ijoic2ftdw1hbxuilcjhijoiy21ny3pndhrsmhzjnzjsbzd3ymrnz3k2acj9.in5gksmsejaejkjealxb_a" : tile_layer_7179e79787d3c486f2834046c8f11fb3,
+                },
+                overlays :  {
+                    "NDVI Abril 2023" : tile_layer_6b99209c2367ac8cf5f7eb1279c3c89e,
+                    "NDVI Point" : geo_json_d8ff762093ed24a55fa05aaa5274edb5,
+                },
+            };
+            let layer_control_acec2d97b95eb269236e5e56ff36f3c6 = L.control.layers(
+                layer_control_acec2d97b95eb269236e5e56ff36f3c6_layers.base_layers,
+                layer_control_acec2d97b95eb269236e5e56ff36f3c6_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_93b88c04a68888c8977f2063743bbc43);
+
+        
+</script>
+</html>

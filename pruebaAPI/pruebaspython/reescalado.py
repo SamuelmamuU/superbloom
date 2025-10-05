@@ -1,5 +1,5 @@
 # ===========================================
-# 🌍 Google Earth Engine + Folium Integration
+# 🌍 Google Earth Engine + Mapbox Integration
 # Proyecto: Sistema de Recomendaciones para Restaurar Ecosistemas de Floración
 # ===========================================
 
@@ -8,6 +8,13 @@ import folium
 import pandas as pd
 import geopandas as gpd
 import webbrowser
+import os
+
+# ===========================================
+# 0️⃣ Token Mapbox
+# ===========================================
+os.environ["MAPBOX_TOKEN"] = "sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A"
+MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 
 # ===========================================
 # 1️⃣ Inicializar GEE
@@ -46,7 +53,10 @@ s2_ndvi = s2.map(add_ndvi)
 # ===========================================
 # 4️⃣ Mediana mensual NDVI (ejemplo: abril)
 # ===========================================
-apr_ndvi = s2_ndvi.filterDate('2023-04-01', '2023-05-01').select('NDVI').median().clip(region)
+apr_ndvi = s2_ndvi.filterDate('2023-04-01', '2023-05-01') \
+    .select('NDVI') \
+    .median() \
+    .clip(region)
 
 # ===========================================
 # 5️⃣ Extraer valores de NDVI para el punto
@@ -65,20 +75,26 @@ gdf.to_file(geojson_file, driver='GeoJSON')
 print(f"✅ GeoJSON generado para el punto: {geojson_file}")
 
 # ===========================================
-# 6️⃣ Visualización en Folium con ráster NDVI
+# 6️⃣ Visualización en Folium con Mapbox
 # ===========================================
+m = folium.Map(
+    location=[32.624, -115.466],
+    zoom_start=10,
+    tiles=f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={MAPBOX_TOKEN}",
+    attr='Mapbox'
+)
+
+# Parámetros de visualización NDVI
 ndvi_params = {'min': 0, 'max': 1, 'palette': ['brown','yellow','green']}
 ndvi_map = apr_ndvi.getMapId(ndvi_params)
 
-m = folium.Map(location=[32.624, -115.466], zoom_start=10, tiles=None)
-
-# Agregar capa ráster NDVI
+# Agregar capa ráster NDVI encima de Mapbox
 folium.TileLayer(
     tiles=ndvi_map['tile_fetcher'].url_format,
     attr='Google Earth Engine',
     overlay=True,
     name='NDVI Abril 2023',
-    opacity=0.5
+    opacity=0.7
 ).add_to(m)
 
 # Agregar capa GeoJSON del punto
@@ -92,7 +108,7 @@ folium.GeoJson(
 folium.LayerControl().add_to(m)
 
 # Guardar y abrir mapa
-map_file = "ndvi_raster_map_mexicali.html"
+map_file = "ndvi_raster_map_mexicali_mapbox.html"
 m.save(map_file)
 webbrowser.open(map_file)
 print(f"🗺️ Mapa guardado y abierto en navegador: {map_file}")

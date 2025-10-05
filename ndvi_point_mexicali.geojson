@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"name": "ndvi_point_mexicali",
+"features": [
+{ "type": "Feature", "properties": { "date": "2023-04-01", "ndvi": 0.0034620431251823902 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
+]
+}
