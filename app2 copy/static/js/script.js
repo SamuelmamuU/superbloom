@@ -16,13 +16,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ESTADO DE LA APLICACIÓN ---
     let map;
     let geeLayers = {}; // Almacenará todas las capas GEE por variable y período
+    window.currentBounds = null; // Bounds del mapa
 
     // ===========================================
     // 1. INICIALIZACIÓN Y MANEJO DE VISTAS
     // ===========================================
-    function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([25.7, -100.3], 10);
-        L.tileLayer(MAPBOX_STYLE_URL, { attribution: MAPBOX_ATTRIBUTION, tileSize: 512, zoomOffset: -1 }).addTo(map);
+    function initMap(bounds) {
+        // Calcular centro a partir de bounds
+        const centerLat = (bounds[0][0] + bounds[1][0]) / 2;
+        const centerLon = (bounds[0][1] + bounds[1][1]) / 2;
+
+        map = L.map('map', { 
+            zoomControl: false,
+            maxBounds: bounds,          // Limita el arrastre al área de la capa
+            maxBoundsViscosity: 1.0     // Evita que se salga del área
+        }).setView([centerLat, centerLon], 10);
+
+        // Capa base
+        L.tileLayer(MAPBOX_STYLE_URL, { 
+            attribution: MAPBOX_ATTRIBUTION, 
+            tileSize: 512, 
+            zoomOffset: -1 
+        }).addTo(map);
+
+        // Control de zoom
         L.control.zoom({ position: 'bottomright' }).addTo(map);
     }
     
@@ -35,7 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    initMap();
+    // Inicializar mapa con bounds temporales (se actualizarán después)
+    initMap([[0, 0], [0, 0]]);
 
     // ===========================================
     // 2. LLAMADA A LA API Y MANEJO DE DATOS
@@ -55,6 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
             historic_start: document.getElementById('historic-start').value, historic_end: document.getElementById('historic-end').value,
             current_start: document.getElementById('current-start').value, current_end: document.getElementById('current-end').value
         };
+
+        // Guardar bounds globalmente para maxBounds
+        window.currentBounds = [
+            [payload.coords[1], payload.coords[0]], // [ymin, xmin]
+            [payload.coords[3], payload.coords[2]]  // [ymax, xmax]
+        ];
+
+        // Re-inicializar mapa con bounds reales
+        initMap(window.currentBounds);
 
         try {
             const response = await fetch('/analizar-avanzado', {
@@ -77,18 +104,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. FUNCIONES DE ACTUALIZACIÓN DE LA UI
     // ===========================================
     function updateMap(mapData) {
+        // Eliminar capas anteriores
         Object.values(geeLayers).flat().forEach(layer => map.removeLayer(layer));
         geeLayers = {}; // Reset
 
+        // Crear nuevas capas con opacidad 0.5
         for (const variable in mapData.tile_urls) {
             geeLayers[variable] = {};
             for (const periodo in mapData.tile_urls[variable]) {
-                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.8 });
+                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.5 });
             }
         }
-        
+
+        // Generar controles de capas
         generateLayerControls();
+
+        // Ajustar el centro del mapa
         map.flyTo(mapData.centro, 10);
+
+        // Aplicar bounds máximos
+        if (window.currentBounds) {
+            map.setMaxBounds(window.currentBounds);
+        }
     }
     
     function generateLayerControls() {
@@ -105,11 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
 
         layerGroupsContainer.innerHTML = ''; // Limpiar
-
         const grid = document.createElement('div');
         grid.className = 'layer-grid';
 
-        // Crear una lista única de radio buttons estilizados como una grilla
         layersConfig.forEach(config => {
             const label = document.createElement('label');
             label.className = 'layer-grid-item';
@@ -119,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.id = `radio-${config.id}`;
-            radio.name = 'layer-selection'; // Mismo nombre para agruparlos
+            radio.name = 'layer-selection';
             radio.value = `${config.variable}-${config.period}`;
             radio.checked = config.checked;
             radio.className = 'layer-radio-hidden';
@@ -131,13 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             label.appendChild(nameSpan);
             grid.appendChild(label);
 
-            // Añadir el evento para cambiar de capa
             radio.addEventListener('change', updateVisibleLayer);
         });
 
         layerGroupsContainer.appendChild(grid);
-
-        // Mostrar la capa seleccionada por defecto
         updateVisibleLayer();
     }
 
@@ -150,9 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ocultar todas las capas
         Object.values(geeLayers).forEach(variableLayers => {
             Object.values(variableLayers).forEach(layer => {
-                if (map.hasLayer(layer)) {
-                    map.removeLayer(layer);
-                }
+                if (map.hasLayer(layer)) map.removeLayer(layer);
             });
         });
 
@@ -209,4 +239,3 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 });
-
