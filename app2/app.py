@@ -13,7 +13,7 @@ except Exception as e:
     print("🪪 Autenticando con Google Earth Engine...")
     ee.Authenticate()
     ee.Initialize(project='super-bloom')
-    print("✅ Autenticación completada e inicialización exitosa.")
+    print("✅ Autenticación completada.")
 
 # ===========================================
 # 2️⃣ CONSTANTES Y FUNCIONES AUXILIARES
@@ -21,127 +21,133 @@ except Exception as e:
 
 # --- Constantes de Colecciones y Bandas ---
 S2_COLLECTION = 'COPERNICUS/S2_SR_HARMONIZED'
-LST_COLLECTION = 'MODIS/061/MOD11A1'
-S2_BANDS = {'NIR': 'B8', 'RED': 'B4', 'GREEN': 'B3', 'BLUE': 'B2', 'QA': 'QA60', 'SCL': 'SCL'}
+LST_COLLECTION = 'MODIS/061/MOD11A2' # Usamos la de 8 días para mayor cobertura
+GPM_COLLECTION = 'NASA/GPM_L3/IMERG_V06'
+S2_BANDS = {'NIR': 'B8', 'RED': 'B4', 'GREEN': 'B3', 'BLUE': 'B2', 'SCL': 'SCL'}
 EVI_CONSTANTS = {"G": 2.5, "L": 1, "C1": 6, "C2": 7.5}
 
 # --- Funciones de Procesamiento de Imágenes ---
 def mask_s2_clouds(img):
-    """Enmascara nubes y sombras de Sentinel-2 usando la banda SCL."""
     scl = img.select('SCL')
-    # Píxeles buenos: vegetación, suelo desnudo, agua, nieve
     good_quality = scl.eq(4).Or(scl.eq(5)).Or(scl.eq(6)).Or(scl.eq(11))
     return img.updateMask(good_quality).divide(10000)
 
+def to_celsius(img):
+    lst = img.select('LST_Day_1km').multiply(0.02).subtract(273.15).rename('LST')
+    return img.addBands(lst)
+
 # --- Funciones de Interpretación ---
 def get_info_safe(ee_object, default_value=None):
-    """Obtiene información de un objeto GEE de forma segura."""
-    try:
-        return ee_object.getInfo()
+    try: return ee_object.getInfo()
     except ee.EEException as e:
-        print(f"Error al obtener datos de GEE: {e}", file=sys.stderr)
+        print(f"Error GEE: {e}", file=sys.stderr)
         return default_value
 
-def interpretar_ndvi(valor):
+def interpretar_cambio(valor, umbral_alto=0.1, umbral_bajo=0.02, tipo=""):
     if valor is None: return "No se pudo calcular."
-    if valor < 0.1: return "Suelo desnudo, rocas o agua."
-    if valor < 0.3: return "Vegetación escasa o estresada."
-    return "Vegetación moderada a densa y saludable."
-
-def interpretar_ndsi_floral(valor):
-    if valor is None: return "No se pudo calcular."
-    if valor < 0.1: return "Dominancia de follaje verde."
-    return "Alta probabilidad de floración visible."
-
-def interpretar_lst(valor):
-    if valor is None: return "No se pudo calcular."
-    if valor < 15: return "Temperatura fría."
-    if valor < 30: return "Temperatura templada."
-    return "Temperatura cálida a muy alta."
-
-def interpretar_cambio_ndvi(valor):
-    """Interpreta el cambio en el valor de NDVI."""
-    if valor is None: return "No se pudo calcular."
-    if valor > 0.1: return "Mejora significativa de la vegetación."
-    if valor > 0.02: return "Ligera mejora de la vegetación."
-    if valor < -0.1: return "Degradación significativa de la vegetación."
-    if valor < -0.02: return "Ligera degradación de la vegetación."
+    if valor > umbral_alto: return f"Aumento significativo de {tipo}."
+    if valor > umbral_bajo: return f"Ligero aumento de {tipo}."
+    if valor < -umbral_alto: return f"Descenso significativo de {tipo}."
+    if valor < -umbral_bajo: return f"Ligero descenso de {tipo}."
     return "Cambio insignificante."
 
+def interpretar_precipitacion(valor):
+    if valor is None: return "No se pudo calcular."
+    if valor < 1: return "Precipitación muy baja o nula."
+    if valor < 10: return "Precipitación baja."
+    if valor < 50: return "Precipitación moderada."
+    return "Precipitación alta."
+
 # ===========================================
-# 3️⃣ FUNCIÓN PRINCIPAL DE ANÁLISIS (UNIFICADA)
+# 3️⃣ FUNCIÓN PRINCIPAL DE ANÁLISIS (AVANZADA)
 # ===========================================
-def analizar_ecosistema_completo(coords_rectangulo, historic_start, historic_end, current_start, current_end):
-    region = ee.Geometry.Rectangle(coords_rectangulo)
-    centroides = region.centroid().coordinates().getInfo()
-    centro_mapa = [centroides[1], centroides[0]] # Lat, Lon
-    
-    # --- Preparación de la colección base Sentinel-2 ---
+def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
+    region = ee.Geometry.Rectangle(coords)
+    centro_mapa = [region.centroid().coordinates().get(1).getInfo(), region.centroid().coordinates().get(0).getInfo()]
+
+    # --- CÁLCULOS PRINCIPALES ---
+    # 1. VEGETACIÓN (NDVI)
     s2_collection = ee.ImageCollection(S2_COLLECTION).filterBounds(region)
-
-    # --- ANÁLISIS DEL PERÍODO ACTUAL (PARA EL DASHBOARD Y MAPA) ---
-    s2_current = s2_collection.filterDate(current_start, current_end).map(mask_s2_clouds)
-    image_current = s2_current.median().clip(region)
-
-    # Calcular todos los índices para el período actual
-    nir = image_current.select(S2_BANDS['NIR'])
-    red = image_current.select(S2_BANDS['RED'])
-    green = image_current.select(S2_BANDS['GREEN'])
-    blue = image_current.select(S2_BANDS['BLUE'])
+    s2_current_col = s2_collection.filterDate(c_start, c_end).map(mask_s2_clouds)
+    s2_historic_col = s2_collection.filterDate(h_start, h_end).map(mask_s2_clouds)
     
-    ndvi_current = image_current.normalizedDifference(['B8', 'B4']).rename('NDVI')
-    evi_current = image_current.expression('G * ((NIR - RED) / (NIR + C1 * RED - C2 * BLUE + L))', {'NIR': nir, 'RED': red, 'BLUE': blue, **EVI_CONSTANTS}).rename('EVI')
-    ndsi_floral_current = image_current.normalizedDifference(['B3', 'B4']).rename('NDSI_floral')
-    
-    lst_current = ee.ImageCollection(LST_COLLECTION).filterDate(current_start, current_end).filterBounds(region).select('LST_Day_1km').median().multiply(0.02).subtract(273.15).rename('LST_Celsius').clip(region)
-
-    # --- ANÁLISIS DEL PERÍODO HISTÓRICO (SOLO PARA NDVI Y MAPA) ---
-    s2_historic = s2_collection.filterDate(historic_start, historic_end).map(mask_s2_clouds)
-    ndvi_historic = s2_historic.median().normalizedDifference(['B8', 'B4']).rename('NDVI').clip(region)
-    
-    # --- CÁLCULO DE LA DIFERENCIA (PARA MAPA Y DASHBOARD) ---
+    img_current = s2_current_col.median().clip(region)
+    ndvi_current = img_current.normalizedDifference(['B8', 'B4']).rename('NDVI')
+    ndvi_historic = s2_historic_col.median().normalizedDifference(['B8', 'B4']).rename('NDVI').clip(region)
     ndvi_diff = ndvi_current.subtract(ndvi_historic).rename('NDVI_diff')
 
-    # --- REDUCCIÓN DE DATOS: Obtener valores promedio para el Dashboard ---
-    reducer = ee.Reducer.mean()
-    scale = 100
-
-    current_values = {
-        'ndvi': get_info_safe(ndvi_current.reduceRegion(reducer, region, scale).get('NDVI')),
-        'evi': get_info_safe(evi_current.reduceRegion(reducer, region, scale).get('EVI')),
-        'ndsi_floral': get_info_safe(ndsi_floral_current.reduceRegion(reducer, region, scale).get('NDSI_floral')),
-        'lst_celsius': get_info_safe(lst_current.reduceRegion(reducer, region, 1000).get('LST_Celsius'))
-    }
+    # 2. TEMPERATURA (LST)
+    lst_collection = ee.ImageCollection(LST_COLLECTION).filterBounds(region).map(to_celsius)
+    lst_current = lst_collection.filterDate(c_start, c_end).select('LST').mean().clip(region)
+    lst_historic = lst_collection.filterDate(h_start, h_end).select('LST').mean().clip(region)
+    lst_diff = lst_current.subtract(lst_historic).rename('LST_diff')
     
-    historic_ndvi_val = get_info_safe(ndvi_historic.reduceRegion(reducer, region, scale).get('NDVI'))
-    diff_ndvi_val = get_info_safe(ndvi_diff.reduceRegion(reducer, region, scale).get('NDVI_diff'))
+    # 3. PRECIPITACIÓN (GPM)
+    gpm_collection = ee.ImageCollection(GPM_COLLECTION).filterBounds(region)
+    precip_current = gpm_collection.filterDate(c_start, c_end).select('precipitationCal').sum().clip(region)
+    precip_historic = gpm_collection.filterDate(h_start, h_end).select('precipitationCal').sum().clip(region)
+    precip_diff_rel = precip_current.subtract(precip_historic).divide(precip_historic.add(1e-6)).rename('precip_diff_rel')
 
-    # --- GENERACIÓN DE URLs PARA EL MAPA ---
-    ndvi_palette = ['#CE7E45', '#FCD163', '#99B718', '#74A901', '#207401', '#056201']
-    diff_palette = ['#d7191c', '#fdae61', '#ffffbf', '#abdda4', '#2b83ba']
+    # 4. ÍNDICES ADICIONALES (Solo para el dashboard actual)
+    evi_current = img_current.expression('G * ((NIR - RED) / (NIR + C1 * RED - C2 * BLUE + L))', {'NIR': img_current.select('B8'), 'RED': img_current.select('B4'), 'BLUE': img_current.select('B2'), **EVI_CONSTANTS}).rename('EVI')
+    ndsi_floral_current = img_current.normalizedDifference(['B3', 'B4']).rename('NDSI_floral')
 
+    # --- REDUCCIÓN DE DATOS (Obtener valores numéricos) ---
+    reducer_mean = ee.Reducer.mean()
+    scale = 100
+    
+    # Valores numéricos
+    vals = {
+        'ndvi_c': get_info_safe(ndvi_current.reduceRegion(reducer_mean, region, scale).get('NDVI')),
+        'ndvi_h': get_info_safe(ndvi_historic.reduceRegion(reducer_mean, region, scale).get('NDVI')),
+        'ndvi_d': get_info_safe(ndvi_diff.reduceRegion(reducer_mean, region, scale).get('NDVI_diff')),
+        'lst_c': get_info_safe(lst_current.reduceRegion(reducer_mean, region, 1000).get('LST')),
+        'lst_h': get_info_safe(lst_historic.reduceRegion(reducer_mean, region, 1000).get('LST')),
+        'lst_d': get_info_safe(lst_diff.reduceRegion(reducer_mean, region, 1000).get('LST_diff')),
+        'precip_c': get_info_safe(precip_current.reduceRegion(reducer_mean, region, 1000).get('precipitationCal')),
+        'precip_h': get_info_safe(precip_historic.reduceRegion(reducer_mean, region, 1000).get('precipitationCal')),
+        'precip_d': get_info_safe(precip_diff_rel.reduceRegion(reducer_mean, region, 1000).get('precip_diff_rel')),
+        'evi_c': get_info_safe(evi_current.reduceRegion(reducer_mean, region, scale).get('EVI')),
+        'ndsi_c': get_info_safe(ndsi_floral_current.reduceRegion(reducer_mean, region, scale).get('NDSI_floral'))
+    }
+
+    # --- GENERACIÓN DE MAP IDs ---
     map_urls = {
-        'actual': ndvi_current.getMapId({'min': 0, 'max': 0.8, 'palette': ndvi_palette})['tile_fetcher'].url_format,
-        'historico': ndvi_historic.getMapId({'min': 0, 'max': 0.8, 'palette': ndvi_palette})['tile_fetcher'].url_format,
-        'diferencia': ndvi_diff.getMapId({'min': -0.3, 'max': 0.3, 'palette': diff_palette})['tile_fetcher'].url_format
+        'ndvi': {
+            'actual': ndvi_current.getMapId({'min': 0, 'max': 0.8, 'palette': ['red', 'yellow', 'green']})['tile_fetcher'].url_format,
+            'historico': ndvi_historic.getMapId({'min': 0, 'max': 0.8, 'palette': ['red', 'yellow', 'green']})['tile_fetcher'].url_format,
+            'diferencia': ndvi_diff.getMapId({'min': -0.3, 'max': 0.3, 'palette': ['red', 'white', 'green']})['tile_fetcher'].url_format
+        },
+        'temperatura': {
+            'actual': lst_current.getMapId({'min': 10, 'max': 45, 'palette': ['blue', 'cyan', 'yellow', 'red']})['tile_fetcher'].url_format,
+            'historico': lst_historic.getMapId({'min': 10, 'max': 45, 'palette': ['blue', 'cyan', 'yellow', 'red']})['tile_fetcher'].url_format,
+            'diferencia': lst_diff.getMapId({'min': -5, 'max': 5, 'palette': ['blue', 'white', 'red']})['tile_fetcher'].url_format
+        },
+        'precipitacion': {
+            'actual': precip_current.getMapId({'min': 0, 'max': 50, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
+            'historico': precip_historic.getMapId({'min': 0, 'max': 50, 'palette': ['white', 'blue', 'purple']})['tile_fetcher'].url_format,
+            'diferencia': precip_diff_rel.getMapId({'min': -1, 'max': 1, 'palette': ['red', 'white', 'blue']})['tile_fetcher'].url_format
+        }
     }
     
     # --- ESTRUCTURAR LA SALIDA FINAL ---
     output = {
-        "map_data": {
-            "centro": centro_mapa,
-            "tile_urls": map_urls
-        },
+        "map_data": {"centro": centro_mapa, "tile_urls": map_urls},
         "dashboard_data": {
             "actual": {
-                "ndvi": {"valor": current_values['ndvi'], "interpretacion": interpretar_ndvi(current_values['ndvi'])},
-                "evi": {"valor": current_values['evi'], "interpretacion": "Índice mejorado, sensible en alta vegetación."},
-                "ndsi_floral": {"valor": current_values['ndsi_floral'], "interpretacion": interpretar_ndsi_floral(current_values['ndsi_floral'])},
-                "lst_celsius": {"valor": current_values['lst_celsius'], "interpretacion": interpretar_lst(current_values['lst_celsius'])}
+                "ndvi": {"valor": vals['ndvi_c']},
+                "evi": {"valor": vals['evi_c']},
+                "ndsi_floral": {"valor": vals['ndsi_c']},
+                "temperatura": {"valor": vals['lst_c']},
+                "precipitacion": {"valor": vals['precip_c'], "interpretacion": interpretar_precipitacion(vals['precip_c'])}
             },
             "comparativo": {
-                "ndvi_historico": {"valor": historic_ndvi_val},
-                "cambio_ndvi": {"valor": diff_ndvi_val, "interpretacion": interpretar_cambio_ndvi(diff_ndvi_val)}
+                "ndvi_historico": {"valor": vals['ndvi_h']},
+                "cambio_ndvi": {"valor": vals['ndvi_d'], "interpretacion": interpretar_cambio(vals['ndvi_d'], 0.1, 0.02, 'vegetación')},
+                "temperatura_historica": {"valor": vals['lst_h']},
+                "cambio_temperatura": {"valor": vals['lst_d'], "interpretacion": interpretar_cambio(vals['lst_d'], 2, 0.5, 'temperatura')},
+                "precipitacion_historica": {"valor": vals['precip_h']},
+                "cambio_precipitacion_rel": {"valor": vals['precip_d'], "interpretacion": interpretar_cambio(vals['precip_d'], 0.5, 0.1, 'precipitación')}
             }
         }
     }
@@ -156,26 +162,21 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
-@app.route('/analizar-completo', methods=['POST'])
+@app.route('/analizar-avanzado', methods=['POST'])
 def analizar_endpoint():
     try:
         data = request.get_json()
         required_keys = ['coords', 'historic_start', 'historic_end', 'current_start', 'current_end']
         if not all(key in data for key in required_keys):
-            return jsonify({"error": "Faltan parámetros en la solicitud."}), 400
+            return jsonify({"error": "Faltan parámetros."}), 400
         
-        print(f"Iniciando análisis completo para la región: {data['coords']}")
-        resultados = analizar_ecosistema_completo(
-            coords_rectangulo=data['coords'],
-            historic_start=data['historic_start'],
-            historic_end=data['historic_end'],
-            current_start=data['current_start'],
-            current_end=data['current_end']
+        resultados = analizar_ecosistema_avanzado(
+            data['coords'], data['historic_start'], data['historic_end'],
+            data['current_start'], data['current_end']
         )
-        print("Análisis completado. Enviando resultados al frontend.")
         return jsonify(resultados)
     except Exception as e:
-        print(f"Ocurrió un error en el servidor: {e}", file=sys.stderr)
+        print(f"Error en servidor: {e}", file=sys.stderr)
         return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
 if __name__ == '__main__':

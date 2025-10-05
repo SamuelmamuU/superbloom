@@ -1,12 +1,13 @@
 :root {
-    --background: #111827; /* Gris oscuro */
-    --foreground: #F9FAFB; /* Casi blanco */
-    --card: #1F2937;       /* Gris más claro */
+    --background: #111827;
+    --foreground: #F9FAFB;
+    --card: #1F2937;
     --border: #374151;
-    --primary: #34D399;    /* Verde esmeralda */
+    --primary: #34D399; /* Verde */
     --primary-foreground: #111827;
     --muted-foreground: #9CA3AF;
-    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    --color-temp: #FBBF24; /* Amarillo/Naranja */
+    --color-precip: #60A5FA; /* Azul */
 }
 
 body {
@@ -36,230 +37,140 @@ body {
     box-sizing: border-box;
 }
 .logo { display: flex; align-items: center; gap: 12px; }
-.logo-icon { font-size: 24px; }
+.logo-icon i { font-size: 24px; color: var(--foreground); }
 .logo h1 { font-size: 1.25rem; margin: 0; }
-.logo p { font-size: 0.75rem; color: var(--primary); margin: 0; }
+.logo p { font-size: 0.75rem; color: var(--muted-foreground); margin: 0; }
 .nav-button {
     padding: 8px 16px; border: none; background: transparent; color: var(--muted-foreground);
     cursor: pointer; font-size: 0.9rem; font-weight: 500; border-radius: 6px;
     transition: all 0.2s ease;
 }
 .nav-button:hover { background-color: rgba(255,255,255,0.1); color: var(--foreground); }
-.nav-button.active { background-color: var(--primary); color: var(--primary-foreground); }
-.status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted-foreground); }
+.nav-button.active { background-color: var(--primary); color: var(--primary-foreground); }.status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted-foreground); }
 .status-indicator { width: 8px; height: 8px; background-color: var(--primary); border-radius: 50%; }
 
 /* --- Contenedor de Vistas --- */
-.main-content {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-}
+.main-content { flex: 1; position: relative; overflow: hidden; }
 .view {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    position: absolute; width: 100%; height: 100%; opacity: 0;
+    visibility: hidden; transition: opacity 0.4s ease, transform 0.4s ease;
     transform: translateY(10px);
 }
-.view.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
+.view.active { opacity: 1; visibility: visible; transform: translateY(0); }
 
 /* --- Vista de Mapa y Barra Lateral --- */
 #map-view { display: flex; }
 .map-sidebar {
-    width: 350px;
-    background: var(--card);
-    padding: 20px;
-    overflow-y: auto;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    width: 350px; background: var(--card); padding: 20px;
+    overflow-y: auto; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 20px;
 }
-.sidebar-title {
-    margin: 0;
-    font-size: 1.5rem;
-}
+.sidebar-title { margin: 0; font-size: 1.5rem; }
 .filter-card {
-    background-color: var(--background);
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid var(--border);
+    background-color: var(--background); border-radius: 8px;
+    padding: 16px; border: 1px solid var(--border);
 }
-.filter-card h3 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 1rem;
-    color: var(--muted-foreground);
-    font-weight: 500;
+#layer-groups-container h3, .filter-card h3 {
+    margin-top: 0; margin-bottom: 16px; font-size: 1rem;
+    color: var(--muted-foreground); font-weight: 500;
 }
 #analysis-form { display: flex; flex-direction: column; gap: 16px; }
 fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
 legend { font-weight: 500; font-size: 0.9rem; padding: 0 8px; color: var(--muted-foreground); }
 .coord-grid, .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 input { 
-    width: 100%; padding: 8px; background-color: var(--background); border: 1px solid var(--border);
-    border-radius: 6px; color: var(--foreground); box-sizing: border-box; 
+    width: 100%; padding: 8px; background-color: var(--background);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--foreground); box-sizing: border-box; 
 }
 #submit-button {
-    padding: 10px; background-color: var(--primary); color: var(--primary-foreground); border: none;
-    border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.2s;
+    padding: 10px; background-color: var(--primary); color: var(--primary-foreground);
+    border: none; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.2s;
 }
 #submit-button:hover { background-color: #4ade80; }
 #submit-button:disabled { background-color: #4B5563; cursor: not-allowed; }
-#loading { display: none; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
-.spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    /* Cambia la duración de la animación aquí */
-    animation: spin 5s linear infinite; 
-}
-.hidden { display: none; }
+#loading { display: none !important; }
 #map { flex: 1; height: 100%; background-color: var(--background); }
 
-/* --- Controles de Capas (Checkboxes) --- */
-#layer-controls .placeholder {
-    font-size: 0.9rem;
-    color: var(--muted-foreground);
-    text-align: center;
+/* --- Nuevos Estilos para Grilla de Capas --- */
+#layer-groups-container {
+    background-color: transparent;
+    border: none;
+    padding: 0;
 }
-.layer-item {
+.placeholder { color: var(--muted-foreground); font-size: 0.9rem; text-align: center; }
+.layer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.layer-radio-hidden {
+    display: none;
+}
+.layer-grid-item {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.2;
+    min-height: 40px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-    cursor: pointer;
+    justify-content: center;
 }
-
-/* Eliminamos 'flex: 1' que causaba la separación */
-.layer-item label {
-    font-weight: 500;
-    cursor: pointer;
+.layer-grid-item:hover {
+    background-color: var(--border);
+    transform: translateY(-2px);
 }
-
-/* Cambiamos el estilo de checkbox a radio button circular */
-.layer-item input[type="radio"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border);
-    border-radius: 50%; /* Lo hacemos circular */
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s ease;
-    display: grid;
-    place-content: center;
+.layer-grid-item[data-variable="ndvi"] { border-left-color: var(--primary); }
+.layer-grid-item[data-variable="temperatura"] { border-left-color: var(--color-temp); }
+.layer-grid-item[data-variable="precipitacion"] { border-left-color: var(--color-precip); }
+label:has(> .layer-radio-hidden:checked) {
+    color: var(--primary-foreground);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-
-.layer-item input[type="radio"]::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    transform: scale(0);
-    transition: 120ms transform ease-in-out;
+label:has(> .layer-radio-hidden:checked)[data-variable="ndvi"] {
     background-color: var(--primary);
-}
-
-.layer-item input[type="radio"]:checked {
     border-color: var(--primary);
 }
-
-.layer-item input[type="radio"]:checked::before {
-    transform: scale(1);
+label:has(> .layer-radio-hidden:checked)[data-variable="temperatura"] {
+    background-color: var(--color-temp);
+    border-color: var(--color-temp);
+}
+label:has(> .layer-radio-hidden:checked)[data-variable="precipitacion"] {
+    background-color: var(--color-precip);
+    border-color: var(--color-precip);
 }
 
-/* Colores específicos para cada capa */
-.layer-item[data-layer="actual"] label { color: #34D399; } /* Verde */
-.layer-item[data-layer="historico"] label { color: #A78BFA; } /* Morado */
-.layer-item[data-layer="diferencia"] label { color: #FBBF24; } /* Amarillo */ 
 /* --- Vista de Análisis --- */
 #analytics-view { padding: 24px; overflow-y: auto; }
 .analytics-header { margin-bottom: 24px; }
 .analytics-header h1 { font-size: 2rem; margin: 0; }
 .analytics-header p { color: var(--muted-foreground); }
-
-.key-metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.key-metrics-grid .placeholder {
-    color: var(--muted-foreground);
-}
-.metric-card {
-    background: var(--card);
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
+.key-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.metric-card { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
 .metric-card-header { display: flex; justify-content: space-between; align-items: center; color: var(--muted-foreground); font-size: 0.9rem; }
 .metric-card-body .value { font-size: 2.25rem; font-weight: 700; }
-.metric-card-body .label { font-size: 0.8rem; color: var(--muted-foreground); }
-.metric-card-footer { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
-.up { color: #34D399; }
+#detailed-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px; }
+#detailed-dashboard .result-card { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+.result-card h3 { margin: 0 0 8px 0; font-size: 1rem; color: var(--muted-foreground); }
+.result-card .valor { font-size: 1.75rem; font-weight: 700; }
+.result-card .interpretacion { font-size: 0.85rem; color: var(--foreground); }
+.up { color: var(--primary); }
 .down { color: #F87171; }
 
-.detailed-dashboard {
-    background: var(--card);
-    padding: 24px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
-.detailed-dashboard h2 { margin-top: 0; }
-.results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-.result-card { background: var(--background); padding: 16px; border-radius: 8px; }
-.result-card h3 { margin: 0 0 8px 0; font-size: 1rem; color: var(--muted-foreground); }
-.result-card .valor { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
-.result-card .interpretacion { font-size: 0.85rem; color: var(--foreground); }
-
-
-/* Estilo para el ícono del calendario en inputs de fecha */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    /* Invierte los colores del ícono (negro se convierte en blanco) */
-    filter: invert(0);
-}
-
-/* Contenedor para el input de fecha */
-.date-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-/* Ocultamos el ícono de calendario por defecto */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-    -webkit-appearance: none;
-}
-
-/* Posicionamos nuestro ícono de Font Awesome */
+/* --- Estilos de Inputs de Fecha --- */
+.date-input-wrapper { position: relative; display: flex; align-items: center; }
+input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
 .date-input-wrapper .fa-calendar-days {
-    color: white;
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none; /* Evita que el ícono bloquee el clic */
+    color: white; position: absolute; right: 10px;
+    top: 50%; transform: translateY(-50%); pointer-events: none;
 }
+input[type="date"] { padding-right: 30px; }
 
-/* Opcional: Aseguramos que el texto del input no se solape con el ícono */
-input[type="date"] {
-    padding-right: 30px; 
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3000deg); } }
