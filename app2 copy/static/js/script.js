@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const variable in mapData.tile_urls) {
             geeLayers[variable] = {};
             for (const periodo in mapData.tile_urls[variable]) {
-                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.5 });
+                geeLayers[variable][periodo] = L.tileLayer(mapData.tile_urls[variable][periodo], { opacity: 0.8 });
             }
         }
         

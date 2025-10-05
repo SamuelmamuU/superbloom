@@ -116,7 +116,7 @@ def analizar_ecosistema_avanzado(coords, h_start, h_end, c_start, c_end):
         'ndvi': {
             'actual': ndvi_current.getMapId({'min': 0, 'max': 0.8, 'palette': ['red', 'yellow', 'green']})['tile_fetcher'].url_format,
             'historico': ndvi_historic.getMapId({'min': 0, 'max': 0.8, 'palette': ['red', 'yellow', 'green']})['tile_fetcher'].url_format,
-            'diferencia': ndvi_diff.getMapId({'min': -0.3, 'max': 0.3, 'palette': ['red', 'white', 'green']})['tile_fetcher'].url_format
+            'diferencia': ndvi_diff.getMapId({'min': -0.3, 'max': 0.3, 'palette': ['red', 'yellow', 'green']})['tile_fetcher'].url_format
         },
         'temperatura': {
             'actual': lst_current.getMapId({'min': 10, 'max': 45, 'palette': ['blue', 'cyan', 'yellow', 'red']})['tile_fetcher'].url_format,
