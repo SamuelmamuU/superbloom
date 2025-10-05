@@ -19,127 +19,137 @@
 
 </head>
 <body>
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <video id="splash-video" autoplay muted>
+            <source src="../static/css/splashboson ‐ Hecho con Clipchamp.mp4" type="video/mp4">
+            Tu navegador no soporta video.
+        </video>
+    </div>
 
-    <div class="app-container">
-        <nav class="main-nav">
-            <div class="logo">
-                <div class="logo-icon"><img src="../static/css/LogoBoson.png" alt="Logo Bosón" class="logo-img"></i></div>
-                <div>
-                    <h1>Bosón De Quásar</h1>
-                    <p>Sistema de floración</p>
+    <div id="main-content" style="display:none;"></div>
+
+        <div class="app-container">
+            <nav class="main-nav">
+                <div class="logo">
+                    <div class="logo-icon"><img src="../static/css/LogoBoson.png" alt="Logo Bosón" class="logo-img"></i></div>
+                    <div>
+                        <h1>Bosón De Quásar</h1>
+                        <p>Sistema de floración</p>
+                    </div>
                 </div>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-button active" data-view="map"><i class="fa-regular fa-map"></i> Mapa</button>
-                <button class="nav-button" data-view="analytics"><i class="fa-solid fa-chart-simple"></i> Análisis</button>
-            </div>
-            <div class="status">
-                <div class="status-indicator"></div>
-                Sistema Activo
-            </div>
-        </nav>
+                <div class="nav-buttons">
+                    <button class="nav-button active" data-view="map"><i class="fa-regular fa-map"></i> Mapa</button>
+                    <button class="nav-button" data-view="analytics"><i class="fa-solid fa-chart-simple"></i> Análisis</button>
+                </div>
+                <div class="status">
+                    <div class="status-indicator"></div>
+                    Sistema Activo
+                </div>
+            </nav>
 
-        <main class="main-content">
+            <main class="main-content">
 
-            <div id="map-view" class="view active">
-                <aside class="map-sidebar">
-                    <div class="sidebar-header">
-                        <h2 class="sidebar-title">Filtros de Capas</h2>
+                <div id="map-view" class="view active">
+                    <aside class="map-sidebar">
+                        <div class="sidebar-header">
+                            <h2 class="sidebar-title">Filtros de Capas</h2>
+                        </div>
+
+                        <div id="layer-groups-container" class="filter-card">
+                            <p class="placeholder">Ejecuta un análisis para ver las capas.</p>
+                        </div>
+
+                        <div class="filter-card">
+                            <h3>Período de Análisis</h3>
+                            <form id="analysis-form">
+                                <fieldset>
+                                    <legend>Región</legend>
+                                    <div class="coord-grid">
+                                        <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
+                                        <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
+                                        <input type="number" id="xmax" step="any" required value="-114.5" title="Latitud Este">
+                                        <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
+                                    </div>
+                                </fieldset>
+
+                                <fieldset>
+                                    <legend>Período Histórico</legend>
+                                    <div class="date-grid">
+                                        <div class="date-input-wrapper">
+                                            <input type="date" id="historic-start" required value="2023-01-01">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </div>
+                                        <div class="date-input-wrapper">
+                                            <input type="date" id="historic-end" required value="2023-03-31">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset>
+                                    <legend>Período Actual</legend>
+                                    <div class="date-grid">
+                                        <div class="date-input-wrapper">
+                                            <input type="date" id="current-start" required value="2023-04-01">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </div>
+                                        <div class="date-input-wrapper">
+                                            <input type="date" id="current-end" required value="2023-04-30">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <button type="submit" id="submit-button">Analizar Región</button>
+                            </form>
+                        </div>
+                    </aside>
+                    <div id="map"></div>
+                </div>
+
+                <div id="analytics-view" class="view">
+                    <div class="analytics-header">
+                        <h1>Análisis Ambiental</h1>
+                        <p>Dashboard de estadísticas y comparativas del ecosistema.</p>
+                    </div>
+                    
+                    <div id="key-metrics" class="key-metrics-grid">
+                        <p class="placeholder">Ejecuta un análisis en la pestaña "Mapa" para ver los resultados.</p>
                     </div>
 
-                    <div id="layer-groups-container" class="filter-card">
-                         <p class="placeholder">Ejecuta un análisis para ver las capas.</p>
+                    <div id="detailed-dashboard">
+                        <!-- El dashboard detallado se insertará aquí -->
                     </div>
 
-                    <div class="filter-card">
-                        <h3>Período de Análisis</h3>
-                        <form id="analysis-form">
-                            <fieldset>
-                                <legend>Región</legend>
-                                <div class="coord-grid">
-                                    <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
-                                    <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
-                                    <input type="number" id="xmax" step="any" required value="-114.5" title="Latitud Este">
-                                    <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
+                    <!-- NUEVA SECCIÓN PARA GRÁFICAS -->
+                    <div id="charts-container" class="charts-container">
+                        <h2>Evolución Histórica (Últimos 4 Años)</h2>
+                        <div class="charts-grid">
+                            <div class="chart-card">
+                                <h3>Tendencia de Vegetación (NDVI)</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="ndvi-chart"></canvas>
                                 </div>
-                            </fieldset>
-
-                            <fieldset>
-                                <legend>Período Histórico</legend>
-                                <div class="date-grid">
-                                    <div class="date-input-wrapper">
-                                        <input type="date" id="historic-start" required value="2023-01-01">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </div>
-                                    <div class="date-input-wrapper">
-                                        <input type="date" id="historic-end" required value="2023-03-31">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Tendencia de Temperatura (LST)</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="temperatura-chart"></canvas>
                                 </div>
-                            </fieldset>
-
-                            <fieldset>
-                                <legend>Período Actual</legend>
-                                <div class="date-grid">
-                                    <div class="date-input-wrapper">
-                                        <input type="date" id="current-start" required value="2023-04-01">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </div>
-                                    <div class="date-input-wrapper">
-                                        <input type="date" id="current-end" required value="2023-04-30">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Precipitación Mensual Acumulada</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="precipitacion-chart"></canvas>
                                 </div>
-                            </fieldset>
-
-                            <button type="submit" id="submit-button">Analizar Región</button>
-                        </form>
-                    </div>
-                </aside>
-                <div id="map"></div>
-            </div>
-
-            <div id="analytics-view" class="view">
-                <div class="analytics-header">
-                    <h1>Análisis Ambiental</h1>
-                    <p>Dashboard de estadísticas y comparativas del ecosistema.</p>
-                </div>
-                
-                <div id="key-metrics" class="key-metrics-grid">
-                    <p class="placeholder">Ejecuta un análisis en la pestaña "Mapa" para ver los resultados.</p>
-                </div>
-
-                <div id="detailed-dashboard">
-                     <!-- El dashboard detallado se insertará aquí -->
-                </div>
-
-                <!-- NUEVA SECCIÓN PARA GRÁFICAS -->
-                <div id="charts-container" class="charts-container">
-                    <h2>Evolución Histórica (Últimos 4 Años)</h2>
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <h3>Tendencia de Vegetación (NDVI)</h3>
-                            <div class="chart-wrapper">
-                                <canvas id="ndvi-chart"></canvas>
                             </div>
                         </div>
-                        <div class="chart-card">
-                            <h3>Tendencia de Temperatura (LST)</h3>
-                            <div class="chart-wrapper">
-                                <canvas id="temperatura-chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3>Precipitación Mensual Acumulada</h3>
-                            <div class="chart-wrapper">
-                                <canvas id="precipitacion-chart"></canvas>
-                            </div>
-                        </div>
                     </div>
-                </div>
 
-            </div>
-        </main>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

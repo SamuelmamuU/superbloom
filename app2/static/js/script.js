@@ -1,4 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+
+    const splashScreen = document.getElementById('splash-screen');
+    const mainContent = document.getElementById('main-content');
+    const video = document.getElementById('splash-video');
+
+    function hideSplash() {
+        splashScreen.style.opacity = '0'; // comienza el desvanecimiento
+        setTimeout(() => {
+            splashScreen.style.display = 'none'; // al terminar la transición, ocultar completamente
+            mainContent.style.display = 'block';
+        }, 1000); // mismo tiempo que la transición CSS
+    }
+
+    video.addEventListener('ended', hideSplash);
+    splashScreen.addEventListener('click', () => {
+        video.pause();
+        hideSplash();
+    });
+
+
+
     // --- CONFIGURACIÓN ---
     const MAPBOX_TOKEN = 'sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A';
     const MAPBOX_STYLE_URL = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`;
