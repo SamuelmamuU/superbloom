@@ -31,10 +31,10 @@ except Exception as e:
 # ===========================================
 # 2️⃣ Parámetros generales para Mexicali
 # ===========================================
-region = ee.Geometry.Rectangle([-115.5, 32.5, -114.5, 33.0])  # Mexicali y alrededores
+region = ee.Geometry.Rectangle([-118.6, 34.4, -117.8, 35.0])  # Mexicali y alrededores
 start_date = '2023-01-01'
 end_date = '2023-12-31'
-pt = ee.Geometry.Point([-115.466, 32.624])  # Centro aproximado de Mexicali
+pt = ee.Geometry.Point([-118.2, 34.7])  # Centro aproximado de Mexicali
 
 # ===========================================
 # 3️⃣ Cargar colección Sentinel-2 SR y calcular NDVI
@@ -69,7 +69,7 @@ mean_ndvi = apr_ndvi.reduceRegion(
 print(f"📍 NDVI promedio en el punto para abril 2023 (Mexicali): {mean_ndvi:.3f}")
 
 df = pd.DataFrame([{'date': '2023-04-01', 'ndvi': mean_ndvi}])
-gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy([-115.466], [32.624]))
+gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy([-118.2], [34.7]))
 geojson_file = "ndvi_point_mexicali.geojson"
 gdf.to_file(geojson_file, driver='GeoJSON')
 print(f"✅ GeoJSON generado para el punto: {geojson_file}")
@@ -78,7 +78,7 @@ print(f"✅ GeoJSON generado para el punto: {geojson_file}")
 # 6️⃣ Visualización en Folium con Mapbox
 # ===========================================
 m = folium.Map(
-    location=[32.624, -115.466],
+    location=[34.7, -118.2],
     zoom_start=10,
     tiles=f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={MAPBOX_TOKEN}",
     attr='Mapbox'
