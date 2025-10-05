@@ -1,0 +1,68 @@
+{
+    "parametros_generales": {
+        "region_coordenadas": [
+            [
+                [
+                    -118.6,
+                    34.4
+                ],
+                [
+                    -117.8,
+                    34.4
+                ],
+                [
+                    -117.8,
+                    35
+                ],
+                [
+                    -118.6,
+                    35
+                ],
+                [
+                    -118.6,
+                    34.4
+                ]
+            ]
+        ],
+        "fecha_inicio": "2023-04-01",
+        "fecha_fin": "2023-04-30"
+    },
+    "variables_de_entrada": {
+        "descripcion": "Valores medios de reflectancia de las bandas usadas en los calculos.",
+        "bandas_sentinel2": {
+            "NIR_B8": 0.32755466618697504,
+            "ROJO_B4": 0.18268657432912444,
+            "VERDE_B3": 0.1537477347645468,
+            "AZUL_B2": 0.11142275455219006
+        },
+        "constantes_formulas": {
+            "EVI": {
+                "G": 2.5,
+                "L": 1,
+                "C1": 6,
+                "C2": 7.5
+            }
+        }
+    },
+    "resultados_calculados": {
+        "descripcion": "Valores medios de los indices para la region y fechas especificadas.",
+        "indices": {
+            "ndvi": {
+                "valor": 0.3143216192283261,
+                "interpretacion": "Vegetacion moderada y saludable."
+            },
+            "evi": {
+                "valor": 0.23254890636131678,
+                "interpretacion": "Similar al NDVI, mejora la sensibilidad en areas de alta biomasa."
+            },
+            "ndsi_floral": {
+                "valor": -0.07845344215246333,
+                "interpretacion": "Mezcla de follaje y posible floracion."
+            },
+            "lst_celsius": {
+                "valor": 30.17981777829387,
+                "interpretacion": "Temperatura calida."
+            }
+        }
+    }
+}
