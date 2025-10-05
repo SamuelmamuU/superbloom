@@ -12,21 +12,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
 </head>
 <body>
 
     <div class="app-container">
         <nav class="main-nav">
             <div class="logo">
-                <div class="logo-icon">🌿</div>
+                <div class="logo-icon"><i class="fa-solid fa-seedling" style="color: #ffffff;"></i></div>
                 <div>
                     <h1>EcoMap</h1>
-                    <p>Sistema de Visualización Ambiental</p>
+                    <p>Sistema de Análisis Ambiental</p>
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-button active" data-view="map">🗺️ Mapa</button>
-                <button class="nav-button" data-view="analytics">📊 Análisis</button>
+                <button class="nav-button active" data-view="map"><i class="fa-regular fa-map" style="color: #ffffff;"></i> Mapa</button>
+                <button class="nav-button" data-view="analytics"><i class="fa-solid fa-chart-simple" style="color: #ffffff;"></i> Análisis</button>
             </div>
             <div class="status">
                 <div class="status-indicator"></div>
@@ -38,40 +40,65 @@
 
             <div id="map-view" class="view active">
                 <aside class="map-sidebar">
-                    <h2>Parámetros de Análisis</h2>
-                    <form id="analysis-form">
-                        <fieldset>
-                            <legend>1. Región de Interés</legend>
-                            <div class="coord-grid">
-                                <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
-                                <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
-                                <input type="number" id="xmax" step="any" required value="-114.5" title="Longitud Este">
-                                <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
-                            </div>
-                        </fieldset>
+                    <div class="sidebar-header">
+                        <h2 class="sidebar-title">Filtros de Capas</h2>
+                    </div>
 
-                        <fieldset>
-                            <legend>2. Período Histórico</legend>
-                            <div class="date-grid">
-                                <input type="date" id="historic-start" required value="2023-01-01">
-                                <input type="date" id="historic-end" required value="2023-03-31">
-                            </div>
-                        </fieldset>
-
-                        <fieldset>
-                            <legend>3. Período Actual</legend>
-                            <div class="date-grid">
-                                <input type="date" id="current-start" required value="2023-04-01">
-                                <input type="date" id="current-end" required value="2023-04-30">
-                            </div>
-                        </fieldset>
-
-                        <button type="submit" id="submit-button">Analizar Región</button>
-                        <div id="loading" class="hidden">
-                            <div class="spinner"></div>
-                            <span>Procesando...</span>
+                    <div class="filter-card">
+                        <h3>Capas de Datos</h3>
+                        <div id="layer-controls">
+                            <p class="placeholder">Ejecuta un análisis para ver las capas disponibles.</p>
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="filter-card">
+                        <h3>Período de Análisis</h3>
+                        <form id="analysis-form">
+                            <fieldset>
+                                <legend>Región</legend>
+                                <div class="coord-grid">
+                                    <input type="number" id="xmin" step="any" required value="-115.5" title="Longitud Oeste">
+                                    <input type="number" id="ymin" step="any" required value="32.5" title="Latitud Sur">
+                                    <input type="number" id="xmax" step="any" required value="-114.5" title="Longitud Este">
+                                    <input type="number" id="ymax" step="any" required value="33.0" title="Latitud Norte">
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Período Histórico</legend>
+                                <div class="date-grid">
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="historic-start" required value="2023-01-01">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </div>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="historic-end" required value="2023-03-31">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Período Actual</legend>
+                                <div class="date-grid">
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="current-start" required value="2023-04-01">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </div>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="current-end" required value="2023-04-30">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <button type="submit" id="submit-button">Analizar Región</button>
+                            <div id="loading" class="hidden">
+                                <div class="spinner"></div>
+                                <span>Procesando...</span>
+                            </div>
+                        </form>
+                    </div>
                 </aside>
                 <div id="map"></div>
             </div>
@@ -83,7 +110,8 @@
                 </div>
                 
                 <div id="key-metrics" class="key-metrics-grid">
-                    </div>
+                    <p class="placeholder">Ejecuta un análisis en la pestaña "Mapa" para ver los resultados.</p>
+                </div>
 
                 <div id="detailed-dashboard" class="detailed-dashboard">
                      </div>
