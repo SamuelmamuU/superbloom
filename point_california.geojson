@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"name": "point_california",
+"features": [
+{ "type": "Feature", "properties": { "ndvi_h": 0.010858834721148014, "ndvi_c": -0.00047885076492093503, "ndvi_d": -0.011337685486068949, "temp_h": 14950.583333333334, "temp_c": 15804.666666666666, "temp_d": 854.08333333333212, "precip_h": 0.057579588145017624, "precip_c": 0.016089079901576042, "precip_d": -0.041490508243441582 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
+]
+}

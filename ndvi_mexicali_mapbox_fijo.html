@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_55582bf87fdd90d174e431cdcf1e58db {
+                #map_bca130503b957e67cf51ccf2afab6496 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -70,16 +70,16 @@
 <body>
     
     
-            <div class="folium-map" id="map_55582bf87fdd90d174e431cdcf1e58db" ></div>
+            <div class="folium-map" id="map_bca130503b957e67cf51ccf2afab6496" ></div>
         
 </body>
 <script>
     
     
-            var map_55582bf87fdd90d174e431cdcf1e58db = L.map(
-                "map_55582bf87fdd90d174e431cdcf1e58db",
+            var map_bca130503b957e67cf51ccf2afab6496 = L.map(
+                "map_bca130503b957e67cf51ccf2afab6496",
                 {
-                    center: [34.7, -118.2],
+                    center: [32.624, -115.466],
                     crs: L.CRS.EPSG3857,
                     ...{
   "zoom": 10,
@@ -94,7 +94,7 @@
 
         
     
-            var tile_layer_50cfb819e37c83b21a49f9e01bcb9506 = L.tileLayer(
+            var tile_layer_7258fceb0338a8fa1b4bbb7fd4c4e0ca = L.tileLayer(
                 "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A",
                 {
   "minZoom": 0,
@@ -111,83 +111,86 @@
             );
         
     
-            tile_layer_50cfb819e37c83b21a49f9e01bcb9506.addTo(map_55582bf87fdd90d174e431cdcf1e58db);
+            tile_layer_7258fceb0338a8fa1b4bbb7fd4c4e0ca.addTo(map_bca130503b957e67cf51ccf2afab6496);
         
     
-            var tile_layer_3c5fd4c4140d04c7dd488e06db774448 = L.tileLayer(
-                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/272d34ce8d33f7a4cc5e43fffe58ae4a-f5b17d660ce780288ab067f004a467c0/tiles/{z}/{x}/{y}",
+            var tile_layer_3a3d306ab396a40544d42eb1a401caba = L.tileLayer(
+                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/895458301537292e208ce0285c2e5157-880a6512f72145385c95c3adccc59b1a/tiles/{z}/{x}/{y}",
                 {
   "minZoom": 0,
   "maxZoom": 18,
   "maxNativeZoom": 18,
   "noWrap": false,
-  "attribution": "GEE",
+  "attribution": "Google Earth Engine",
   "subdomains": "abc",
   "detectRetina": false,
   "tms": false,
-  "opacity": 0.5,
+  "opacity": 0.6,
 }
 
             );
         
     
-            var tile_layer_7e0865222feded7c0088b1adddbda774 = L.tileLayer(
-                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/3747e1023de02c774325afe081789e2b-046a9de359472fc60981a5b58a84afa7/tiles/{z}/{x}/{y}",
+            var tile_layer_eaa5a81b6a5b579594c75dcbba384bc2 = L.tileLayer(
+                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/eff3adcd646a785f8169838af6d718e3-2881f72fe6a3a4dbbddfbae1e73e47d6/tiles/{z}/{x}/{y}",
                 {
   "minZoom": 0,
   "maxZoom": 18,
   "maxNativeZoom": 18,
   "noWrap": false,
-  "attribution": "GEE",
+  "attribution": "Google Earth Engine",
   "subdomains": "abc",
   "detectRetina": false,
   "tms": false,
-  "opacity": 0.5,
+  "opacity": 0.6,
 }
 
             );
         
     
-            var tile_layer_f352753d6fcf6153cb033bab9f7f7c55 = L.tileLayer(
-                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/6d160c4d3480748087b955f6447bee49-204fe7b5bb9d8befba27170f641a274b/tiles/{z}/{x}/{y}",
+            tile_layer_eaa5a81b6a5b579594c75dcbba384bc2.addTo(map_bca130503b957e67cf51ccf2afab6496);
+        
+    
+            var tile_layer_916c6f86ac1b32b8762cdd07e88efe8a = L.tileLayer(
+                "https://earthengine.googleapis.com/v1/projects/super-bloom/maps/79cf33f6745d9f62ddab6af82c2118da-be1358b718bdcbb86bfe66f906b57277/tiles/{z}/{x}/{y}",
                 {
   "minZoom": 0,
   "maxZoom": 18,
   "maxNativeZoom": 18,
   "noWrap": false,
-  "attribution": "GEE",
+  "attribution": "Google Earth Engine",
   "subdomains": "abc",
   "detectRetina": false,
   "tms": false,
-  "opacity": 0.5,
+  "opacity": 0.6,
 }
 
             );
         
     
 
-        function geo_json_d8a916960d905bc781f3577b78ab8281_onEachFeature(feature, layer) {
+        function geo_json_c276f905236b236a00ff3dda234ae24a_onEachFeature(feature, layer) {
 
             layer.on({
             });
         };
-        var geo_json_d8a916960d905bc781f3577b78ab8281 = L.geoJson(null, {
-                onEachFeature: geo_json_d8a916960d905bc781f3577b78ab8281_onEachFeature,
+        var geo_json_c276f905236b236a00ff3dda234ae24a = L.geoJson(null, {
+                onEachFeature: geo_json_c276f905236b236a00ff3dda234ae24a_onEachFeature,
             
             ...{
 }
         });
 
-        function geo_json_d8a916960d905bc781f3577b78ab8281_add (data) {
-            geo_json_d8a916960d905bc781f3577b78ab8281
+        function geo_json_c276f905236b236a00ff3dda234ae24a_add (data) {
+            geo_json_c276f905236b236a00ff3dda234ae24a
                 .addData(data);
         }
-            geo_json_d8a916960d905bc781f3577b78ab8281_add({"features": [{"geometry": {"coordinates": [-118.2, 34.7], "type": "Point"}, "properties": {"current": 0.28128543496131897, "diff": 0.16093900054693222, "historic": 0.12034643441438675}, "type": "Feature"}], "name": "ndvi_point_mexicali", "type": "FeatureCollection"});
-        geo_json_d8a916960d905bc781f3577b78ab8281.setStyle(function(feature) {return feature.properties.style;});
+            geo_json_c276f905236b236a00ff3dda234ae24a_add({"features": [{"geometry": {"coordinates": [-115.466, 32.624], "type": "Point"}, "properties": {"current": -0.00047885076492093503, "diff": -0.011337685486068949, "historic": 0.010858834721148014}, "type": "Feature"}], "name": "ndvi_point_mexicali", "type": "FeatureCollection"});
+        geo_json_c276f905236b236a00ff3dda234ae24a.setStyle(function(feature) {return feature.properties.style;});
 
         
     
-    geo_json_d8a916960d905bc781f3577b78ab8281.bindTooltip(
+    geo_json_c276f905236b236a00ff3dda234ae24a.bindTooltip(
     function(layer){
     let div = L.DomUtil.create('div');
     
@@ -222,25 +225,28 @@
 });
                      
     
-            var layer_control_4afbe2be341b9be6c3c2b21a63147a25_layers = {
+            geo_json_c276f905236b236a00ff3dda234ae24a.addTo(map_bca130503b957e67cf51ccf2afab6496);
+        
+    
+            var layer_control_074be2f2d3d0a5593ec6f893157ddd99_layers = {
                 base_layers : {
                 },
                 overlays :  {
-                    "NDVI Hist\u00f3rico" : tile_layer_3c5fd4c4140d04c7dd488e06db774448,
-                    "NDVI Actual" : tile_layer_7e0865222feded7c0088b1adddbda774,
-                    "Contraste NDVI" : tile_layer_f352753d6fcf6153cb033bab9f7f7c55,
-                    "NDVI Point" : geo_json_d8a916960d905bc781f3577b78ab8281,
+                    "NDVI Hist\u00f3rico" : tile_layer_3a3d306ab396a40544d42eb1a401caba,
+                    "NDVI Actual" : tile_layer_eaa5a81b6a5b579594c75dcbba384bc2,
+                    "Contraste NDVI" : tile_layer_916c6f86ac1b32b8762cdd07e88efe8a,
+                    "NDVI Point" : geo_json_c276f905236b236a00ff3dda234ae24a,
                 },
             };
-            let layer_control_4afbe2be341b9be6c3c2b21a63147a25 = L.control.layers(
-                layer_control_4afbe2be341b9be6c3c2b21a63147a25_layers.base_layers,
-                layer_control_4afbe2be341b9be6c3c2b21a63147a25_layers.overlays,
+            let layer_control_074be2f2d3d0a5593ec6f893157ddd99 = L.control.layers(
+                layer_control_074be2f2d3d0a5593ec6f893157ddd99_layers.base_layers,
+                layer_control_074be2f2d3d0a5593ec6f893157ddd99_layers.overlays,
                 {
   "position": "topright",
   "collapsed": false,
   "autoZIndex": true,
 }
-            ).addTo(map_55582bf87fdd90d174e431cdcf1e58db);
+            ).addTo(map_bca130503b957e67cf51ccf2afab6496);
 
         
 </script>

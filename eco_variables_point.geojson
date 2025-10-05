@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"name": "eco_variables_point",
+"features": [
+{ "type": "Feature", "properties": { "NDVI_hist": 0.065339140594005585, "NDVI_curr": 0.069367475807666779, "NDVI_diff": 0.0040283352136611938, "Temp_hist": 24.57, "Temp_curr": 41.89, "Temp_diff": 17.32, "Rain_hist": 0.022604500874876976, "Rain_curr": 0.00031460056197829545, "Rain_diff": -0.022289900312898681 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
+]
+}

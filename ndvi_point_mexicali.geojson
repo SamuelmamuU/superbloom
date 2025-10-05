@@ -2,6 +2,6 @@
 "type": "FeatureCollection",
 "name": "ndvi_point_mexicali",
 "features": [
-{ "type": "Feature", "properties": { "historic": 0.010858834721148014, "current": -0.00047885076492093503, "diff": -0.011337685486068949 }, "geometry": { "type": "Point", "coordinates": [ -115.466, 32.624 ] } }
+{ "type": "Feature", "properties": { "historic": 0.12034643441438675, "current": 0.28128543496131897, "diff": 0.16093900054693222 }, "geometry": { "type": "Point", "coordinates": [ -118.2, 34.7 ] } }
 ]
 }
