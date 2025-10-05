@@ -1,38 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Imágenes</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Análisis de Vegetación con GEE</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
     <div class="container">
-        <h1>Configuración de Imagen</h1>
-        
-        <form id="config-form">
-            <div class="form-group">
-                <label for="fecha">Seleccionar Fecha:</label>
-                <input type="date" id="fecha" name="fecha" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="tipo">Tipo de Gráfico:</label>
-                <select id="tipo" name="tipo" required>
-                    <option value="">Seleccione un tipo</option>
-                    <option value="lineal">Gráfico Lineal</option>
-                    <option value="barras">Gráfico de Barras</option>
-                    <option value="dispersion">Gráfico de Dispersión</option>
-                </select>
-            </div>
-            
-            <button type="submit">Generar Imagen</button>
+        <header>
+            <h1>🛰️ Analizador de Cobertura Vegetal</h1>
+            <p>Introduce las coordenadas y fechas para analizar los índices de vegetación y temperatura usando datos de Sentinel-2 y MODIS.</p>
+        </header>
+
+        <form id="analysis-form">
+            <fieldset>
+                <legend>Región de Interés (Coordenadas)</legend>
+                <div class="coord-grid">
+                    <div class="form-group">
+                        <label for="xmin">Longitud Oeste (X Mín)</label>
+                        <input type="number" id="xmin" step="any" required value="-118.6">
+                    </div>
+                    <div class="form-group">
+                        <label for="ymin">Latitud Sur (Y Mín)</label>
+                        <input type="number" id="ymin" step="any" required value="34.4">
+                    </div>
+                    <div class="form-group">
+                        <label for="xmax">Longitud Este (X Máx)</label>
+                        <input type="number" id="xmax" step="any" required value="-117.8">
+                    </div>
+                    <div class="form-group">
+                        <label for="ymax">Latitud Norte (Y Máx)</label>
+                        <input type="number" id="ymax" step="any" required value="35.0">
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Rango de Fechas</legend>
+                <div class="date-grid">
+                    <div class="form-group">
+                        <label for="start-date">Fecha de Inicio</label>
+                        <input type="date" id="start-date" required value="2023-04-01">
+                    </div>
+                    <div class="form-group">
+                        <label for="end-date">Fecha de Fin</label>
+                        <input type="date" id="end-date" required value="2023-04-30">
+                    </div>
+                </div>
+            </fieldset>
+
+            <button type="submit" id="submit-button">Analizar Región</button>
         </form>
+
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Procesando en Google Earth Engine... Esto puede tardar un momento.</p>
+        </div>
         
-        <div id="loading" class="hidden">Generando imagen...</div>
-        <div id="imagen-container"></div>
+        <div id="results-container">
+            </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
