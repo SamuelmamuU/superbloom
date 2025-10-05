@@ -11,12 +11,6 @@ import webbrowser
 import os
 
 # ===========================================
-# 0️⃣ Token Mapbox
-# ===========================================
-os.environ["MAPBOX_TOKEN"] = "sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A"
-MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
-
-# ===========================================
 # 1️⃣ Inicializar GEE
 # ===========================================
 try:
@@ -29,20 +23,26 @@ except Exception as e:
     print("✅ Autenticación completada e inicialización exitosa.")
 
 # ===========================================
-# 2️⃣ Parámetros generales 
+# 2️⃣ Token Mapbox
 # ===========================================
-region = ee.Geometry.Rectangle([-118.6, 34.4, -117.8, 35.0])  
-start_date = '2023-01-01'
-end_date = '2023-12-31'
-pt = ee.Geometry.Point([-118.2, 34.7])  # Centro aproximado de Mexicali
+os.environ["MAPBOX_TOKEN"] = "sk.eyJ1Ijoic2FtdW1hbXUiLCJhIjoiY21nY3pndHRsMHZjNzJsbzd3YmRnZ3k2aCJ9.IN5gKsMsEjaejKJEALxB_A"
+MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 
 # ===========================================
-# 3️⃣ Cargar colección Sentinel-2 SR y calcular NDVI
+# 3️⃣ Parámetros generales para Mexicali
 # ===========================================
-s2 = ee.ImageCollection('COPERNICUS/S2_SR') \
+region = ee.Geometry.Rectangle([-115.5, 32.5, -114.5, 33.0])  # Mexicali y alrededores
+start_date = '2023-01-01'
+end_date = '2023-12-31'
+pt = ee.Geometry.Point([-115.466, 32.624])  # Centro aproximado de Mexicali
+
+# ===========================================
+# 4️⃣ Cargar colección Sentinel-2 SR Harmonized y calcular NDVI
+# ===========================================
+s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED') \
     .filterBounds(region) \
     .filterDate(start_date, end_date) \
-    .map(lambda img: img.updateMask(img.select('SCL').neq(3)))  # Quitar nubes (SCL=3)
+    .map(lambda img: img.updateMask(img.select('SCL').neq(3)))  # Quitar nubes
 
 def add_ndvi(img):
     ndvi = img.normalizedDifference(['B8', 'B4']).rename('NDVI')
@@ -51,50 +51,50 @@ def add_ndvi(img):
 s2_ndvi = s2.map(add_ndvi)
 
 # ===========================================
-# 4️⃣ Mediana mensual NDVI (ejemplo: abril)
+# 5️⃣ Mediana mensual NDVI (abril)
 # ===========================================
 apr_ndvi = s2_ndvi.filterDate('2023-04-01', '2023-05-01') \
-    .select('NDVI') \
-    .median() \
-    .clip(region)
+    .select('NDVI').median().clip(region)
 
 # ===========================================
-# 5️⃣ Extraer valores de NDVI para el punto
+# 6️⃣ Extraer valores de NDVI para el punto
 # ===========================================
 mean_ndvi = apr_ndvi.reduceRegion(
     reducer=ee.Reducer.mean(),
     geometry=pt,
     scale=30
 ).get('NDVI').getInfo()
-print(f"📍 NDVI promedio en el punto para abril 2023 : {mean_ndvi:.3f}")
 
+print(f"📍 NDVI promedio en el punto para abril 2023 (Mexicali): {mean_ndvi:.3f}")
+
+# Crear GeoDataFrame para el punto y definir CRS
 df = pd.DataFrame([{'date': '2023-04-01', 'ndvi': mean_ndvi}])
-gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy([-118.2], [34.7]))
-geojson_file = "ndvi_point_new.geojson"
+gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy([-115.466], [32.624]))
+gdf.set_crs("EPSG:4326", inplace=True)
+geojson_file = "ndvi_point_mexicali.geojson"
 gdf.to_file(geojson_file, driver='GeoJSON')
 print(f"✅ GeoJSON generado para el punto: {geojson_file}")
 
 # ===========================================
-# 6️⃣ Visualización en Folium con Mapbox
+# 7️⃣ Visualización en Folium con Mapbox y ráster NDVI
 # ===========================================
+ndvi_params = {'min': 0, 'max': 1, 'palette': ['brown','yellow','green']}
+ndvi_map = apr_ndvi.getMapId(ndvi_params)
+
 m = folium.Map(
-    location=[34.7, -118.2],
+    location=[32.624, -115.466],
     zoom_start=10,
     tiles=f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={MAPBOX_TOKEN}",
     attr='Mapbox'
 )
 
-# Parámetros de visualización NDVI
-ndvi_params = {'min': 0, 'max': 1, 'palette': ['brown','yellow','green']}
-ndvi_map = apr_ndvi.getMapId(ndvi_params)
-
-# Agregar capa ráster NDVI encima de Mapbox
+# Agregar capa ráster NDVI
 folium.TileLayer(
     tiles=ndvi_map['tile_fetcher'].url_format,
     attr='Google Earth Engine',
     overlay=True,
     name='NDVI Abril 2023',
-    opacity=0.7
+    opacity=0.5
 ).add_to(m)
 
 # Agregar capa GeoJSON del punto
@@ -108,7 +108,7 @@ folium.GeoJson(
 folium.LayerControl().add_to(m)
 
 # Guardar y abrir mapa
-map_file = "ndvi_raster_map_mapbox.html"
+map_file = "ndvi_raster_map_mexicali_mapbox.html"
 m.save(map_file)
 webbrowser.open(map_file)
 print(f"🗺️ Mapa guardado y abierto en navegador: {map_file}")
