@@ -55,6 +55,13 @@ body {
 .status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted-foreground); }
 .status-indicator { width: 8px; height: 8px; background-color: var(--primary); border-radius: 50%; }
 
+/* Oculta los spinners en navegadores como Chrome, Safari, Edge y Opera */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
 /* --- Contenedor de Vistas --- */
 .main-content { flex: 1; position: relative; overflow: hidden; }
 .view {
