@@ -1,64 +1,41 @@
 import requests
+import json
+import re
 
-# ================================
-# Configuración de la API Gemini
-# ================================
-GEMINI_API_URL = "https://api.gemini.com/SuperBloom"  # Reemplaza con la URL real
-API_KEY = "AIzaSyAP3C2oaWSOyfKkn4NoCmsOg0fyzN87McM"  # Si Gemini requiere autenticación
+API_KEY = "AIzaSyCp_k7LhNFNopatr20S_vdzYSTP0iVqCqI"
+MODEL = "models/text-bison-001"  # modelo de texto válido
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/{MODEL}:generate?key={API_KEY}"
 
-# ================================
-# Función para obtener coordenadas
-# ================================
-def obtener_coordenadas(region_name):
-    """
-    Envía el nombre de la región a la API de Gemini
-    y retorna coordenadas (centro o bounding box).
-    """
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+
+def obtener_coordenadas(ciudad):
+    prompt = f"Dame las coordenadas (latitud y longitud) de {ciudad} en JSON con claves 'lat' y 'lon'. Solo responde el JSON."
     
     payload = {
-        "region": region_name
+        "prompt": {
+            "text": prompt
+        },
+        "temperature": 0,
+        "maxOutputTokens": 100
     }
 
     try:
-        response = requests.post(GEMINI_API_URL, json=payload, headers=headers)
-        response.raise_for_status()
-        data = response.json()
+        r = requests.post(GEMINI_URL, json=payload)
+        r.raise_for_status()
+        respuesta = r.json()
+        text = respuesta['candidates'][0]['output']
         
-        # Suponiendo que Gemini devuelve algo como:
-        # { "center": {"lat": ..., "lon": ...}, "bbox": [min_lon, min_lat, max_lon, max_lat] }
-        return data
-    
-    except requests.exceptions.RequestException as e:
-        print("Error al conectar con Gemini:", e)
-        return None
+        # Extraer JSON
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            coords = json.loads(match.group(0))
+            return {"lat": float(coords["lat"]), "lon": float(coords["lon"])}
+        else:
+            return {"error": "No se pudo extraer JSON.", "respuesta": text}
 
-# ================================
-# Interfaz simple de selección
-# ================================
-def seleccionar_region():
-    regiones = ["Monterrey", "Guadalajara", "CDMX", "Cancún"]
-    print("Seleccione una región:")
-    for i, region in enumerate(regiones):
-        print(f"{i+1}. {region}")
-    
-    opcion = int(input("Número de la región: "))
-    if 1 <= opcion <= len(regiones):
-        return regiones[opcion-1]
-    else:
-        print("Opción no válida.")
-        return None
+    except Exception as e:
+        return {"error": str(e)}
 
-# ================================
-# Programa principal
-# ================================
 if __name__ == "__main__":
-    region_seleccionada = seleccionar_region()
-    if region_seleccionada:
-        coordenadas = obtener_coordenadas(region_seleccionada)
-        if coordenadas:
-            print(f"Coordenadas obtenidas para {region_seleccionada}:")
-            print(coordenadas)
+    ciudad = input("Ingresa el nombre de la ciudad: ")
+    resultado = obtener_coordenadas(ciudad)
+    print("Resultado:", resultado)
